@@ -9,7 +9,7 @@ namespace Dvonn_Console
     // Denne enum er lagt i namespacet, så alle classes kan bruge den.
     public enum pieceID
     {
-        Dvonn, White, Black, Test
+        Dvonn, White, Black
     }
 
     class Piece

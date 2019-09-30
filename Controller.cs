@@ -13,25 +13,30 @@ namespace Dvonn_Console
         Writer typeWriter = new Writer();
         Game dvonnGame;
         Board dvonnBoard;
-        
+        Rules ruleBook;
+
 
 
         public void BeginNewGame()
         {
             typeWriter.WelcomeText();
-            
-            dvonnGame = new Game(3, 23, 23);
+
             dvonnBoard = new Board();
+            dvonnBoard.InstantiateFields();
+            dvonnGame = new Game();
+            dvonnGame.RandomPopulate(3, 23, 23, ref dvonnBoard);
+            ruleBook = new Rules();
+            ruleBook.dvonnBoard = dvonnBoard;
 
             Console.Clear();
             typeWriter.Coordinates();
             dvonnBoard.CalculatePrincipalMoves();
-            dvonnBoard.VisualizeBoard(dvonnGame);
-            
+            dvonnBoard.VisualizeBoard();
 
+            RunGameMenu();
         }
 
-        public void GameMenu()
+        public void RunGameMenu()
         {
 
             bool gamerunning = true;
@@ -171,9 +176,9 @@ namespace Dvonn_Console
                 }
                 if (move.Equals("RULES"))
                 {
-                    Write.Rules();
+                    typeWriter.Rules();
                     WaitForUser();
-                    Write.VisualizeBoard();
+                    dvonnBoard.VisualizeBoard();
                     Console.WriteLine();
                     continue;
                 }
@@ -186,20 +191,19 @@ namespace Dvonn_Console
                 char delimiterChar = '/';
                 sourceAndTarget = move.Split(delimiterChar);
 
-                if (!Calculate.AllFieldIDs.Contains(sourceAndTarget[0]))
+                if (!dvonnBoard.entireBoard.Any(field => field.fieldName == sourceAndTarget[0]))
                 {
                     Console.WriteLine("Source field is not entered correctly.");
                     continue;
                 }
-                if (!Calculate.AllFieldIDs.Contains(sourceAndTarget[1]))
+                if (!dvonnBoard.entireBoard.Any(field => field.fieldName == sourceAndTarget[1]))
                 {
                     Console.WriteLine("Target field is not entered correctly.");
                     continue;
                 }
 
-                // efter at ovenstående kode har sikret at formatteringen af inputtet er korrekt, analyseres de angivne field IDs for at vurdere om trækket er tilladt i henhold til Dvonn reglerne:
-                moveCombo[0] = Calculate.IDFromString(sourceAndTarget[0]);
-                moveCombo[1] = Calculate.IDFromString(sourceAndTarget[1]);
+                moveCombo[0] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
+                moveCombo[1] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
 
                 if (!Calculate.LegalSources(pieceID.White).Contains(moveCombo[0]))
                 {
@@ -274,8 +278,23 @@ namespace Dvonn_Console
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
         }
-    }
 
-}
+        public void HandleDvonnCollapse()
+        {
+            int[] counters = ruleBook.RemoveUnheldStacks(ruleBook.FindHeldStacks());
+            int fieldCounter = counters[0];
+            int pieceCounter = counters[1];
+
+            if (fieldCounter > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("A Dvonn collapse has happened.");
+                Console.WriteLine("{0} Fields containing {1} pieces has been removed from the board", fieldCounter, pieceCounter);
+                WaitForUser();
+                dvonnBoard.VisualizeBoard();
+            }
+        }
+
+    }
 
 }
