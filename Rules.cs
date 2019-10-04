@@ -8,6 +8,7 @@ namespace Dvonn_Console
 {
     class Rules
     {
+        Writer typeWriter = new Writer();
 
         public Board dvonnBoard;
 
@@ -85,6 +86,17 @@ namespace Dvonn_Console
             return score;
 
         }
+
+        public void CheckDvonnCollapse()
+        {
+            int[] result = RemoveUnheldStacks(FindHeldStacks());
+            if (result[0] > 0 && result[1] > 0)
+            {
+                typeWriter.DvonnCollapseText(result);
+            }
+
+        }
+
         public List<Field> FindHeldStacks()
         {
             List<Field> heldFields = new List<Field>();
@@ -146,6 +158,28 @@ namespace Dvonn_Console
 
             return result;
 
+        }
+
+        public bool GameEndCondition()
+        {
+            if (LegalMoves(pieceID.White) == 0 && LegalMoves(pieceID.Black) == 0) return true;
+            else return false;
+        }
+        public bool PassCondition(pieceID Color)
+        {
+            if (LegalMoves(Color) == 0) return true;
+            else return false;
+        }
+        public int LegalMoves(pieceID Color)
+        {
+            int legalMoves = 0;
+
+            foreach (int fieldID in LegalSources(Color)) 
+            {
+                legalMoves = legalMoves + LegalTargets(fieldID, dvonnBoard.entireBoard[fieldID].stack.Count).Count; // this line counts all legal targets for current selected position on the board...
+
+            }
+            return legalMoves; 
         }
 
 

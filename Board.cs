@@ -15,8 +15,9 @@ namespace Dvonn_Console
     {
 
         public Field[] entireBoard = new Field[49];
-        
-        //int 1: source field (in entireBoard), int 2: target field in entireBoard, int3: number of fields jumped.
+
+
+        //item 1: source field (in entireBoard), item 2: target field in entireBoard, item 3: number of fields jumped.
         public List<Tuple<int, int, int>> allPrincipalMoves = new List<Tuple<int, int, int>>();
 
         public void CalculatePrincipalMoves()
@@ -110,6 +111,37 @@ namespace Dvonn_Console
             E8.index = 48; E8.NW = D8; E8.NE = D9; E8.EA = null; E8.SE = null; E8.SW = null; E8.WE = E7; E8.isEdge = true; entireBoard[48] = E8;
 
         }
+
+        public void ReceivePosition(Position position)
+        {
+            for (int i = 0; i < 49; i++)
+            {
+                entireBoard[i].stack = position.stacks[i];
+
+            }
+
+        }
+        public Position SendPosition()
+        {
+            Position result = new Position();
+            for (int i = 0; i < 49; i++)
+            {
+                result.stacks[i] = entireBoard[i].stack;
+            }
+            return result;
+
+        }
+
+        public void Clear()
+        {
+            foreach(Field field in entireBoard)
+            {
+                field.stack.Clear();
+
+            }
+
+        }
+
 
         public void VisualizeBoard()
         {

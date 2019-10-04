@@ -12,44 +12,35 @@ namespace Dvonn_Console
         //public Player whitePlayer;
         //public Player blackPlayer;
 
-        
-        public void RandomPopulate(int dvonnCount, int whiteCount, int blackCount, ref Board thisBoard)
+
+        public Position RandomPopulate(int dvonnCount, int whiteCount, int blackCount)
+        {
+            Position position = new Position();
+
+            position = DistributePieces(position, dvonnCount, pieceID.Dvonn);
+            position = DistributePieces(position, whiteCount, pieceID.White);
+            position = DistributePieces(position, blackCount, pieceID.Black);
+
+            return position;
+        }
+
+        public Position DistributePieces(Position position, int pieceCount, pieceID pieceColor)
         {
             Random rGen = new Random();
 
-            // For each type of piece, a loop is run to distribute all 49 pieces...
-            for (int i = 0; i < dvonnCount; i++)
+            for (int i = 0; i < pieceCount; i++)
             {
                 int rNum = rGen.Next(0, 49);
-                Field selectedField = thisBoard.entireBoard[rNum];
-                if (selectedField.stack.Count == 0) 
+
+                if (position.stacks[rNum].Count == 0)
                 {
-                    selectedField.stack.Add(new Piece(pieceID.Dvonn));
+                    position.stacks[rNum].Add(new Piece(pieceColor));
                 }
-                else dvonnCount++; //the field was occupied, run the loop once again.
+                else pieceCount++; //the field was occupied, run the loop once again.
             }
 
-            for (int i = 0; i < whiteCount; i++)
-            {
-                int rNum = rGen.Next(0, 49);
-                Field selectedField = thisBoard.entireBoard[rNum];
-                if (selectedField.stack.Count == 0)
-                {
-                    selectedField.stack.Add(new Piece(pieceID.White));
-                }
-                else whiteCount++;
-            }
+            return position;
 
-            for (int i = 0; i < blackCount; i++)
-            {
-                int rNum = rGen.Next(0, 49);
-                Field selectedField = thisBoard.entireBoard[rNum];
-                if (selectedField.stack.Count == 0)
-                {
-                    selectedField.stack.Add(new Piece(pieceID.Black));
-                }
-                else blackCount++;
-            }
         }
 
     }

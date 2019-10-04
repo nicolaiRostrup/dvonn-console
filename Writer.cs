@@ -25,6 +25,7 @@ namespace Dvonn_Console
             WaitForUser();
         }
 
+
         public void Coordinates()
         {
             Console.WriteLine();
@@ -38,6 +39,19 @@ namespace Dvonn_Console
             Console.ResetColor();
             Console.WriteLine();
             Console.WriteLine();
+        }
+        public void MenuText()
+        {
+            Console.WriteLine();
+            Console.WriteLine("Please select function:");
+            Console.WriteLine("1 Enter move");
+            Console.WriteLine("2 Inspect stack");
+            Console.WriteLine("3 Calculate score");
+            Console.WriteLine("4 Visualize board");
+            Console.WriteLine("5 Read the rules");
+            Console.WriteLine("6 Exit");
+            Console.WriteLine();
+
         }
         public void Rules()
         {
@@ -60,6 +74,15 @@ namespace Dvonn_Console
             Console.WriteLine();
             Console.WriteLine("Dvonn looks like a simple game, but is really a serious mind bender. Please, enjoy…");
         }
+
+        public void DvonnCollapseText(int[] account)
+        {
+            Console.WriteLine();
+            Console.WriteLine("A Dvonn collapse has happened: \n" + account[0] + " stacks has been removed, containing " + account[1] + " pieces.");
+            Console.WriteLine();
+        }
+
+
         public void GameEndText(int[] gameScore)
         {
             //int[] gameScore = Calculate.Score();

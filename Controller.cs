@@ -24,7 +24,9 @@ namespace Dvonn_Console
             dvonnBoard = new Board();
             dvonnBoard.InstantiateFields();
             dvonnGame = new Game();
-            dvonnGame.RandomPopulate(3, 23, 23, ref dvonnBoard);
+            Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
+            dvonnBoard.ReceivePosition(randomPosition);
+
             ruleBook = new Rules();
             ruleBook.dvonnBoard = dvonnBoard;
 
@@ -38,43 +40,43 @@ namespace Dvonn_Console
 
         public void RunGameMenu()
         {
-
             bool gamerunning = true;
-            while (gamerunning == true)
+
+            while (gamerunning)
             {
-                Console.WriteLine();
-                Console.WriteLine("Please select function:");
-                Console.WriteLine("1 Enter move");
-                Console.WriteLine("2 Inspect stack");
-                Console.WriteLine("3 Calculate score");
-                Console.WriteLine("4 Visualize board");
-                Console.WriteLine("5 Read the rules");
-                Console.WriteLine("6 Exit");
-                Console.WriteLine();
+
+                typeWriter.MenuText();
 
                 string input = Console.ReadLine();
+
                 switch (input)
                 {
                     case "1": // Enter move ...
                         int[] moveCombo = UserMoveInput();
                         if (moveCombo[0] == 0 && moveCombo[1] == 0) // a special situation, where user wants to go back to menu
                         {
-                            Write.VisualizeBoard();
+                            dvonnBoard.VisualizeBoard();
                             break;
                         }
-                        MakeMove(moveCombo, pieceID.White); // else, if user doesn't want to go back to menu, execute move...
-                        Write.VisualizeBoard();
-                        MoveComment();
-                        Calculate.DvonnCollapse();
-
-                        if (Calculate.GameEndCondition() == true) // Efter hvert hvidt træk, tjekkes der for om spillet er slut.
+                        else
                         {
-                            Write.GameEndText();
+                            MakeMove(moveCombo, pieceID.White); // else, if user doesn't want to go back to menu, execute move...
+                            dvonnBoard.VisualizeBoard();
+                            MoveComment();
+                        }
+                        //Do a check for dvonn collapse, and if true, execute and make comment.
+                        ruleBook.CheckDvonnCollapse();
+
+                        //Check whether game has ended. 
+                        if (ruleBook.GameEndCondition() == true) 
+                        {
+                            typeWriter.GameEndText(ruleBook.Score());
                             gamerunning = false;
                             break; // when returned, close console
                         }
 
-                        if (Calculate.PassCondition(pieceID.Black) == true) // Efter hvert hvidt træk, tjekkes der for om sort ikke har nogen gyldige træk.
+                        //Check if black has any legal moves
+                        if (ruleBook.PassCondition(pieceID.Black) == true) 
                         {
                             Console.WriteLine();
                             Console.WriteLine("Computer has no legal moves. It's your turn again.");
@@ -85,23 +87,25 @@ namespace Dvonn_Console
                         Console.WriteLine("Black is ready to move");
                         WaitForUser();
                         MakeMove(CreateRandomMove(), pieceID.Black);
-                        Write.VisualizeBoard();
+                        dvonnBoard.VisualizeBoard();
                         MoveComment();
-                        Calculate.DvonnCollapse();
+                        ruleBook.CheckDvonnCollapse();
 
-                        if (Calculate.GameEndCondition() == true) // Efter hvert sort træk, tjekkes der for om spillet er slut.
+                        //Again, this time after blacks move, check whether game has ended.
+                        if (ruleBook.GameEndCondition() == true)
                         {
                             WaitForUser();
-                            Write.GameEndText();
+                            typeWriter.GameEndText(ruleBook.Score());
                             gamerunning = false; // when returned, close console
                             break;
                         }
 
-                        if (Calculate.PassCondition(pieceID.White) == true) // Efter hvert sort træk, tjekkes der for om hvid ikke har nogen gyldige træk.
+                        //Check if white has any legal moves
+                        if (ruleBook.PassCondition(pieceID.White) == true) 
                         {
                             RepeatedRandomMove();
-                            if (Calculate.LegalMoves(pieceID.White) != 0) break; // Hvis hvid evt. skulle have fået et gyldigt træk, føres program pointeren til main menu...
-                            Write.GameEndText(); // Ellers er spillet slut.
+                            if (ruleBook.LegalMoves(pieceID.White) != 0) break; // Hvis hvid evt. skulle have fået et gyldigt træk, føres program pointeren til main menu...
+                            typeWriter.GameEndText(ruleBook.Score()); // Ellers er spillet slut.
                             gamerunning = false; // when returned, close console
                             break;
                         }
@@ -113,16 +117,16 @@ namespace Dvonn_Console
 
                     case "3":
                         Console.WriteLine("If game was to end now, the score would be: ");
-                        Console.WriteLine("White: {0} \t Black: {1}", Calculate.Score()[0], Calculate.Score()[1]);
+                        Console.WriteLine("White: {0} \t Black: {1}", ruleBook.Score()[0], ruleBook.Score()[1]);
                         Console.WriteLine();
                         break;
 
                     case "4": // Visualize board
-                        Write.VisualizeBoard();
+                        dvonnBoard.VisualizeBoard();
                         break;
 
                     case "5": //Read the rules
-                        Write.Rules();
+                        typeWriter.Rules();
                         break;
 
                     case "6": //Exit
@@ -130,8 +134,9 @@ namespace Dvonn_Console
                         break;
 
                     case "7": // "Secret" option that lets user create endgame scenario for test purposes
-                        Stack.AllStacks.Clear();
-                        Game PartialDvonnGame = new Game(3, 8, 8);
+                        dvonnBoard.Clear();
+                        Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
+                        dvonnBoard.ReceivePosition(partialDvonnGame);
                         Calculate.DvonnCollapse();
                         break;
 
@@ -252,6 +257,7 @@ namespace Dvonn_Console
             int[] randomMove = { randomSourceField, randomTargetField };
 
             return randomMove;
+
         }
         public void RepeatedRandomMove()
         {
@@ -260,12 +266,14 @@ namespace Dvonn_Console
             {
                 WaitForUser();
                 MakeMove(CreateRandomMove(), pieceID.Black);
-                Write.VisualizeBoard();
+                dvonnBoard.VisualizeBoard();
                 MoveComment();
-                if (Calculate.GameEndCondition() == true) return; //Hvis spillet er slut, skal program pointeren returnere...
+                if (ruleBook.GameEndCondition() == true) return; //Hvis spillet er slut, skal program pointeren returnere...
 
-            } while (Calculate.LegalMoves(pieceID.White) == 0); //Hvis Hvid har bare eet tilladt træk, skal program pointeren returnere...
+            } while (ruleBook.LegalMoves(pieceID.White) == 0); //Hvis Hvid har bare eet tilladt træk, skal program pointeren returnere...
+
         }
+
         public void MoveComment()
         {
             Console.WriteLine();
