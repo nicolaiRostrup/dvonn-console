@@ -32,8 +32,9 @@ namespace Dvonn_Console
             {
                 int rNum = rGen.Next(0, 49);
 
-                if (position.stacks[rNum].Count == 0)
+                if (position.stacks[rNum] == null)
                 {
+                    position.stacks[rNum] = new List<Piece>();
                     position.stacks[rNum].Add(new Piece(pieceColor));
                 }
                 else pieceCount++; //the field was occupied, run the loop once again.

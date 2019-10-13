@@ -8,6 +8,8 @@ namespace Dvonn_Console
 {
     class Writer
     {
+
+        string[] fieldCoordinates = { "A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8", "B9", "C0", "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8", "C9", "CT", "D0", "D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "E0", "E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8" }; 
         public void WelcomeText()
         {
             Console.WriteLine();
@@ -16,7 +18,7 @@ namespace Dvonn_Console
             Console.WriteLine("- a mind-bending abstract boardgame");
             Console.WriteLine();
             Console.WriteLine("C# application developed by Nicolai Rostrup, 2016");
-            Console.WriteLine("Original game conception by Kris Burm, 2001");
+            Console.WriteLine("Original game design by Kris Burm, 2001");
             Console.WriteLine("*****************************************************");
             Console.WriteLine();
             Console.WriteLine("Version 5.0, computer plays with AI.");
@@ -80,6 +82,8 @@ namespace Dvonn_Console
             Console.WriteLine();
             Console.WriteLine("A Dvonn collapse has happened: \n" + account[0] + " stacks has been removed, containing " + account[1] + " pieces.");
             Console.WriteLine();
+            WaitForUser();
+            
         }
 
 
@@ -126,12 +130,21 @@ namespace Dvonn_Console
             WaitForUser();
         }
 
-        static void WaitForUser()
+        public void WaitForUser()
         {
             Console.WriteLine();
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
         }
+
+        public void MoveComment(int[] moveCombo, pieceID Color)
+        {
+            Console.WriteLine();
+            Console.WriteLine(Color.ToString() + " move, " + fieldCoordinates[moveCombo[0]] + " / " + fieldCoordinates[moveCombo[1]] + " has been executed.");
+            WaitForUser();
+
+        }
+        
 
     }
 }

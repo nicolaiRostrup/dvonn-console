@@ -93,6 +93,7 @@ namespace Dvonn_Console
             if (result[0] > 0 && result[1] > 0)
             {
                 typeWriter.DvonnCollapseText(result);
+                dvonnBoard.VisualizeBoard();
             }
 
         }
@@ -116,13 +117,16 @@ namespace Dvonn_Console
             do
             {
                 counter = 0;
-                foreach (Field heldField in heldFields)
+
+                for (int i = 0; i < heldFields.Count; i++)
                 {
-                    foreach (Field neighbourField in heldField.GetNeighbours())
+                    List<Field> neighbours = heldFields[i].GetNeighbours();
+
+                    for (int j = 0; j < neighbours.Count; j++)
                     {
-                        if (neighbourField.stack.Count > 0 && !heldFields.Contains(neighbourField))
+                        if (neighbours[j].stack.Count > 0 && !heldFields.Contains(neighbours[j]))
                         {
-                            heldFields.Add(neighbourField);
+                            heldFields.Add(neighbours[j]);
                             counter++;
                         }
                     }
@@ -170,6 +174,7 @@ namespace Dvonn_Console
             if (LegalMoves(Color) == 0) return true;
             else return false;
         }
+
         public int LegalMoves(pieceID Color)
         {
             int legalMoves = 0;
