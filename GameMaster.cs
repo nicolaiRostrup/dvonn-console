@@ -7,14 +7,12 @@ using System.Threading.Tasks;
 namespace Dvonn_Console
 {
 
-
-    class Controller
+    class GameMaster
     {
         Writer typeWriter = new Writer();
         Game dvonnGame;
         Board dvonnBoard;
         Rules ruleBook;
-
 
 
         public void BeginNewGame()
@@ -23,14 +21,12 @@ namespace Dvonn_Console
 
             dvonnBoard = new Board();
             dvonnBoard.InstantiateFields();
+            dvonnBoard.CalculatePrincipalMoves();
+            ruleBook = new Rules(dvonnBoard);
+
             dvonnGame = new Game();
             Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
             dvonnBoard.ReceivePosition(randomPosition);
-
-            ruleBook = new Rules();
-            ruleBook.dvonnBoard = dvonnBoard;
-
-            dvonnBoard.CalculatePrincipalMoves();
             dvonnBoard.VisualizeBoard();
 
             RunGameMenu();
@@ -110,9 +106,24 @@ namespace Dvonn_Console
                         }
                         break;
 
+                    //Inspect stack:
                     case "2":
-                        //TODO: confer with user to get intended field id.
-                        dvonnBoard.InspectStack(0);
+                        Console.WriteLine("Please enter stack field to inspect:");
+                        string request = Console.ReadLine().ToUpper();
+
+                        while (request.Length != 2)
+                        {
+                            Console.WriteLine("Entered fieldname is not two characters. Please enter fieldnames like this: 'a0' or 'A0'");
+                            request = Console.ReadLine().ToUpper();
+                        }
+
+                        while (!dvonnBoard.entireBoard.Any(field => field.fieldName == request))
+                        {
+                            Console.WriteLine("Field ID is not valid");
+                            request = Console.ReadLine().ToUpper();
+                        }
+
+                        ruleBook.InspectStack(request);
                         break;
 
                     case "3":

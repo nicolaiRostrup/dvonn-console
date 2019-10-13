@@ -50,7 +50,7 @@
     <Compile Include="Position.cs" />
     <Compile Include="Rules.cs" />
     <Compile Include="Writer.cs" />
-    <Compile Include="Controller.cs" />
+    <Compile Include="GameMaster.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -13,17 +13,14 @@ namespace Dvonn_Console
 
     class Board
     {
-
         Writer typeWriter = new Writer();
         public Field[] entireBoard = new Field[49];
-
-        //item 1: source field (in entireBoard), item 2: target field in entireBoard, item 3: number of fields jumped.
         public List<Tuple<int, int, int>> allPrincipalMoves = new List<Tuple<int, int, int>>();
-
 
         public void CalculatePrincipalMoves()
         {
             directionID[] Directions = { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
+
 
             // find all legal moves in any direction for any field
             foreach (directionID Direction in Directions)
@@ -46,6 +43,7 @@ namespace Dvonn_Console
                     }
                 }
             }
+            
         }
 
         public void InstantiateFields()
@@ -113,6 +111,7 @@ namespace Dvonn_Console
 
         }
 
+
         public void ReceivePosition(Position position)
         {
             for (int i = 0; i < 49; i++)
@@ -122,6 +121,7 @@ namespace Dvonn_Console
             }
 
         }
+
         public Position SendPosition()
         {
             Position result = new Position();
@@ -237,10 +237,7 @@ namespace Dvonn_Console
             Console.WriteLine();
         }
 
-        public List<Piece> InspectStack(int fieldID)
-        {
-            return new List<Piece>();
-        }
+
         public void MakeMove(int[] moveCombo, pieceID Color)
         {
             entireBoard[moveCombo[1]].stack.AddRange(entireBoard[moveCombo[0]].stack);
@@ -249,6 +246,7 @@ namespace Dvonn_Console
             typeWriter.MoveComment(moveCombo, Color);
 
         }
+
 
     }
 }

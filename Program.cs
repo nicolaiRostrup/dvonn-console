@@ -10,7 +10,7 @@ namespace Dvonn_Console
     {
         static void Main(string[] args)
         {
-            Controller controller = new Controller();
+            GameMaster controller = new GameMaster();
             controller.BeginNewGame();
 
         }
