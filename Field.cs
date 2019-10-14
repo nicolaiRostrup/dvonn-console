@@ -22,12 +22,7 @@ namespace Dvonn_Console
         public Field WE;
         public Field NW;
 
-
-        public string InspectStack()
-        {
-            return "";
-        }
-
+        
 
         public Piece TopPiece()
         {
@@ -58,6 +53,22 @@ namespace Dvonn_Console
             if (NW != null) theseNeighbours.Add(NW);
 
             return theseNeighbours;
+        }
+
+        public override string ToString()
+        {
+            string returnString = "";
+            if (stack.Count == 0) returnString = "This field is currently empty";
+            else
+            {
+                returnString = "Field " + fieldName + " has a stack that consists of " + stack.Count + " pieces. They are: (From bottom and up) ";
+                foreach(Piece p in stack)
+                {
+                    returnString += p.pieceType + ", ";
+                }
+                
+            }
+            return returnString;
         }
 
     }

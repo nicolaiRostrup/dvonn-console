@@ -13,6 +13,7 @@ namespace Dvonn_Console
         Game dvonnGame;
         Board dvonnBoard;
         Rules ruleBook;
+        StackInspector stackInspector;
 
 
         public void BeginNewGame()
@@ -23,6 +24,7 @@ namespace Dvonn_Console
             dvonnBoard.InstantiateFields();
             dvonnBoard.CalculatePrincipalMoves();
             ruleBook = new Rules(dvonnBoard);
+            stackInspector = new StackInspector(dvonnBoard);
 
             dvonnGame = new Game();
             Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
@@ -123,7 +125,7 @@ namespace Dvonn_Console
                             request = Console.ReadLine().ToUpper();
                         }
 
-                        ruleBook.InspectStack(request);
+                        stackInspector.InspectStack(request);
                         break;
 
                     case "3":
