@@ -57,7 +57,7 @@ namespace Dvonn_Console
 
         public override string ToString()
         {
-            string returnString = "";
+            string returnString;
             if (stack.Count == 0) returnString = "This field is currently empty";
             else
             {

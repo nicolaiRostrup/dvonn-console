@@ -247,6 +247,16 @@ namespace Dvonn_Console
 
         }
 
+        public void UndoMove(int[] moveCombo, int pieceCount)
+        {
+            entireBoard[moveCombo[0]].stack = entireBoard[moveCombo[1]].stack;
+
+            int beginIndex = entireBoard[moveCombo[1]].stack.Count - pieceCount;
+            entireBoard[moveCombo[0]].stack.RemoveRange( 0 , beginIndex);
+            entireBoard[moveCombo[1]].stack.RemoveRange(beginIndex, pieceCount);
+
+        }
+
 
     }
 }

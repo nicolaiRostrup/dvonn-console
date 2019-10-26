@@ -12,7 +12,7 @@ namespace Dvonn_Console
         Dvonn, White, Black
     }
 
-    class Piece
+    public class Piece
     {
         public pieceID pieceType;
 

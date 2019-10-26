@@ -43,11 +43,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AI.cs" />
     <Compile Include="Board.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Node.cs" />
     <Compile Include="Piece.cs" />
     <Compile Include="Position.cs" />
+    <Compile Include="PositionTree.cs" />
     <Compile Include="Rules.cs" />
     <Compile Include="StackInspector.cs" />
     <Compile Include="Writer.cs" />
