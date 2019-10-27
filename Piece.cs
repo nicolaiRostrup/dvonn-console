@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 namespace Dvonn_Console
 {
     // Denne enum er lagt i namespacet, så alle classes kan bruge den.
-    public enum pieceID
+    public enum PieceID
     {
         Dvonn, White, Black
     }
 
     public class Piece
     {
-        public pieceID pieceType;
+        public PieceID pieceType;
 
 
-        public Piece(pieceID pieceType)
+        public Piece(PieceID pieceType)
         {
             this.pieceType = pieceType;
         }

@@ -14,6 +14,7 @@ namespace Dvonn_Console
         Board dvonnBoard;
         Rules ruleBook;
         StackInspector stackInspector;
+        AI aiAgent;
 
 
         public void BeginNewGame()
@@ -25,6 +26,7 @@ namespace Dvonn_Console
             dvonnBoard.CalculatePrincipalMoves();
             ruleBook = new Rules(dvonnBoard);
             stackInspector = new StackInspector(dvonnBoard);
+            aiAgent = new AI();
 
             dvonnGame = new Game();
             Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
@@ -57,9 +59,11 @@ namespace Dvonn_Console
                             break;
                         }
                         else
-                        {
-                            dvonnBoard.MakeMove(moveCombo, pieceID.White); // else, if user doesn't want to go back to menu, execute move...
+                        {   
+                            // else, if user doesn't want to go back to menu, execute move...
+                            dvonnBoard.MakeMove(moveCombo);
                             dvonnBoard.VisualizeBoard();
+                            typeWriter.MoveComment(moveCombo, PieceID.White);
 
                         }
                         //Do a check for dvonn collapse, and if true, execute and make comment.
@@ -74,7 +78,7 @@ namespace Dvonn_Console
                         }
 
                         //Check if black has any legal moves
-                        if (ruleBook.PassCondition(pieceID.Black) == true)
+                        if (ruleBook.PassCondition(PieceID.Black) == true)
                         {
                             Console.WriteLine();
                             Console.WriteLine("Computer has no legal moves. It's your turn again.");
@@ -84,8 +88,10 @@ namespace Dvonn_Console
                         Console.WriteLine();
                         Console.WriteLine("Black is ready to move");
                         WaitForUser();
-                        dvonnBoard.MakeMove(CreateRandomMove(), pieceID.Black);
+                        int[] randomMove = CreateRandomMove(PieceID.Black);
+                        dvonnBoard.MakeMove(randomMove);
                         dvonnBoard.VisualizeBoard();
+                        typeWriter.MoveComment(randomMove, PieceID.Black);
                         ruleBook.CheckDvonnCollapse();
 
                         //Again, this time after blacks move, check whether game has ended.
@@ -98,10 +104,10 @@ namespace Dvonn_Console
                         }
 
                         //Check if white has any legal moves
-                        if (ruleBook.PassCondition(pieceID.White) == true)
+                        if (ruleBook.PassCondition(PieceID.White) == true)
                         {
                             RepeatedRandomMove();
-                            if (ruleBook.LegalMoves(pieceID.White) != 0) break; // Hvis hvid evt. skulle have fået et gyldigt træk, føres program pointeren til main menu...
+                            if (ruleBook.LegalMoves(PieceID.White) != 0) break; // Hvis hvid evt. skulle have fået et gyldigt træk, føres program pointeren til main menu...
                             typeWriter.GameEndText(ruleBook.Score()); // Ellers er spillet slut.
                             gamerunning = false; // when returned, close console
                             break;
@@ -146,11 +152,32 @@ namespace Dvonn_Console
                         gamerunning = false;
                         break;
 
-                    case "7": // "Secret" option that lets user create endgame scenario for test purposes
+                    case "7": // "Secret" option that lets developer create endgame scenario for test purposes
                         dvonnBoard.Clear();
                         Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
                         dvonnBoard.ReceivePosition(partialDvonnGame);
                         ruleBook.CheckDvonnCollapse();
+                        break;
+
+                    case "8": // Another "Secret" option that lets developer test AI
+                        int[] thisMoveCombo = GetUserMoveInput();
+                        int sourcePieceCount = dvonnBoard.entireBoard[thisMoveCombo[0]].stack.Count;
+                        dvonnBoard.MakeMove(thisMoveCombo);
+                        dvonnBoard.VisualizeBoard();
+                        typeWriter.MoveComment(thisMoveCombo, PieceID.White);
+                        WaitForUser();
+                        dvonnBoard.UndoMove(thisMoveCombo, sourcePieceCount);
+                        dvonnBoard.VisualizeBoard();
+                        break;
+
+                    case "9": // Yet another "Secret" option that lets developer test AI
+                        int[] rndMove = CreateRandomMove(PieceID.White);
+                        dvonnBoard.MakeMove(rndMove);
+                        dvonnBoard.VisualizeBoard();
+                        typeWriter.MoveComment(rndMove, PieceID.White);
+                        WaitForUser();
+                        aiAgent.CreateTree(dvonnBoard.SendPosition(), 10);
+                        //Console.WriteLine(aiAgent.PrintTree(50000));
                         break;
 
                     default:
@@ -213,7 +240,7 @@ namespace Dvonn_Console
                 moveCombo[0] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
                 moveCombo[1] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
 
-                if (!ruleBook.LegalSources(pieceID.White).Contains(moveCombo[0]))
+                if (!ruleBook.LegalSources(PieceID.White).Contains(moveCombo[0]))
                 {
                     Console.WriteLine("The source field is not valid.");
                     Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
@@ -229,16 +256,16 @@ namespace Dvonn_Console
                 userInputCorrect = true;
             }
 
-            return moveCombo; 
+            return moveCombo;
 
         }
-        public int[] CreateRandomMove()
+        public int[] CreateRandomMove(PieceID player)
         {
             Random rGen = new Random();
 
-            List<int> legalSources = ruleBook.LegalSources(pieceID.Black);
+            List<int> legalSources = ruleBook.LegalSources(player);
 
-            //Removes all the legas sources that do not have at least one legal target.
+            //Removes all the legal sources that do not have at least one legal target.
             List<int> trueLegalSources = legalSources.FindAll(src => ruleBook.LegalTargets(src, dvonnBoard.entireBoard[src].stack.Count).Count != 0);
 
             int randomSourceField = trueLegalSources[rGen.Next(0, trueLegalSources.Count)];
@@ -256,13 +283,15 @@ namespace Dvonn_Console
             do
             {
                 WaitForUser();
-                dvonnBoard.MakeMove(CreateRandomMove(), pieceID.Black);
+                int[] randomMove = CreateRandomMove(PieceID.Black);
+                dvonnBoard.MakeMove(randomMove); 
                 dvonnBoard.VisualizeBoard();
+                typeWriter.MoveComment(randomMove, PieceID.Black);
 
                 //TODO: write how the game should end, game end text, etc...
                 if (ruleBook.GameEndCondition() == true) return;
 
-            } while (ruleBook.LegalMoves(pieceID.White) == 0);
+            } while (ruleBook.LegalMoves(PieceID.White) == 0);
 
         }
 

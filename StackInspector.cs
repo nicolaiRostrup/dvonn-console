@@ -37,7 +37,7 @@ namespace Dvonn_Console
             {
                 Console.WriteLine("This field is a one piece stack. The color is " + chosenPieceList[0].pieceType);
 
-                if (chosenPieceList[0].pieceType != pieceID.Dvonn)
+                if (chosenPieceList[0].pieceType != PieceID.Dvonn)
                 {
                     if (legalTargets.Count == 0) Console.WriteLine(fieldName + " has currently no legal targets:");
                     else
@@ -55,8 +55,8 @@ namespace Dvonn_Console
             if (chosenPieceList.Count > 1)
             {
                 Console.WriteLine(fieldName + " is currently a stack of " + chosenPieceList.Count + ". Top color is " + thisBoard.entireBoard[fieldID].TopPiece().pieceType + ".");
-                Console.WriteLine("The stack comprises: " + chosenPieceList.Count(p => p.pieceType == pieceID.White) + " White pieces and " + chosenPieceList.Count(p => p.pieceType == pieceID.Black) + " Black pieces.");
-                if (chosenPieceList.Count(p => p.pieceType == pieceID.Dvonn) > 0) Console.WriteLine("The stack also contains " + chosenPieceList.Count(p => p.pieceType == pieceID.Dvonn) + " Dvonn pieces.");
+                Console.WriteLine("The stack comprises: " + chosenPieceList.Count(p => p.pieceType == PieceID.White) + " White pieces and " + chosenPieceList.Count(p => p.pieceType == PieceID.Black) + " Black pieces.");
+                if (chosenPieceList.Count(p => p.pieceType == PieceID.Dvonn) > 0) Console.WriteLine("The stack also contains " + chosenPieceList.Count(p => p.pieceType == PieceID.Dvonn) + " Dvonn pieces.");
                 else Console.WriteLine("The stack contains no Dvonn pieces.");
 
                 legalTargets = ruleBook.LegalTargets(fieldID, chosenPieceList.Count);

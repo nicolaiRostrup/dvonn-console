@@ -137,11 +137,10 @@ namespace Dvonn_Console
             Console.ReadKey();
         }
 
-        public void MoveComment(int[] moveCombo, pieceID Color)
+        public void MoveComment(int[] moveCombo, PieceID Color)
         {
             Console.WriteLine();
             Console.WriteLine(Color.ToString() + " move, " + fieldCoordinates[moveCombo[0]] + " / " + fieldCoordinates[moveCombo[1]] + " has been executed.");
-            WaitForUser();
 
         }
         

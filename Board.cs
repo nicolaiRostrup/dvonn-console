@@ -43,7 +43,7 @@ namespace Dvonn_Console
                     }
                 }
             }
-            
+
         }
 
         public void InstantiateFields()
@@ -86,7 +86,7 @@ namespace Dvonn_Console
             C7.index = 26; C7.NW = B6; C7.NE = B7; C7.EA = C8; C7.SE = D7; C7.SW = D6; C7.WE = C6; C7.isEdge = false; entireBoard[26] = C7; C7.fieldName = "C7";
             C8.index = 27; C8.NW = B7; C8.NE = B8; C8.EA = C9; C8.SE = D8; C8.SW = D7; C8.WE = C7; C8.isEdge = false; entireBoard[27] = C8; C8.fieldName = "C8";
             C9.index = 28; C9.NW = B8; C9.NE = B9; C9.EA = CT; C9.SE = D9; C9.SW = D8; C9.WE = C8; C9.isEdge = false; entireBoard[28] = C9; C9.fieldName = "C9";
-            CT.index = 29; CT.NW = B9; CT.NE = null; CT.EA = null; CT.SE = null; CT.SW = D9; CT.WE = C9; CT.isEdge = true; entireBoard[29] = CT; C0.fieldName = "CT";
+            CT.index = 29; CT.NW = B9; CT.NE = null; CT.EA = null; CT.SE = null; CT.SW = D9; CT.WE = C9; CT.isEdge = true; entireBoard[29] = CT; CT.fieldName = "CT";
 
             D0.index = 30; D0.NW = C0; D0.NE = C1; D0.EA = D1; D0.SE = E0; D0.SW = null; D0.WE = null; D0.isEdge = true; entireBoard[30] = D0; D0.fieldName = "D0";
             D1.index = 31; D1.NW = C1; D1.NE = C2; D1.EA = D2; D1.SE = E1; D1.SW = E0; D1.WE = D0; D1.isEdge = false; entireBoard[31] = D1; D1.fieldName = "D1";
@@ -114,9 +114,14 @@ namespace Dvonn_Console
 
         public void ReceivePosition(Position position)
         {
+            Clear();
+
             for (int i = 0; i < 49; i++)
             {
-                entireBoard[i].stack = position.stacks[i];
+                foreach (Piece piece in position.stacks[i])
+                {
+                    entireBoard[i].stack.Add(new Piece(piece.pieceType));
+                }
 
             }
 
@@ -126,16 +131,23 @@ namespace Dvonn_Console
         {
             Position result = new Position();
             for (int i = 0; i < 49; i++)
-            {
-                result.stacks[i] = entireBoard[i].stack;
+            {   
+                result.stacks[i] = new List<Piece>();
+
+                foreach (Piece piece in entireBoard[i].stack)
+                {
+                    result.stacks[i].Add(new Piece(piece.pieceType));
+                }
+
             }
             return result;
 
         }
 
+
         public void Clear()
         {
-            foreach(Field field in entireBoard)
+            foreach (Field field in entireBoard)
             {
                 field.stack.Clear();
 
@@ -165,9 +177,9 @@ namespace Dvonn_Console
                 else
                 {
                     Piece Toppiece = entireBoard[i].TopPiece();
-                    bool containsDvonn = thisStack.Any(item => item.pieceType == pieceID.Dvonn);
+                    bool containsDvonn = thisStack.Any(item => item.pieceType == PieceID.Dvonn);
 
-                    if (Toppiece.pieceType == pieceID.Dvonn)
+                    if (Toppiece.pieceType == PieceID.Dvonn)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write("(");
@@ -176,7 +188,7 @@ namespace Dvonn_Console
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(")");
                     }
-                    if (containsDvonn == false && Toppiece.pieceType == pieceID.White)
+                    if (containsDvonn == false && Toppiece.pieceType == PieceID.White)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write("(");
@@ -185,7 +197,7 @@ namespace Dvonn_Console
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(")");
                     }
-                    if (containsDvonn == false && Toppiece.pieceType == pieceID.Black)
+                    if (containsDvonn == false && Toppiece.pieceType == PieceID.Black)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write("(");
@@ -194,7 +206,7 @@ namespace Dvonn_Console
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(")");
                     }
-                    if (containsDvonn == true && Toppiece.pieceType == pieceID.White)
+                    if (containsDvonn == true && Toppiece.pieceType == PieceID.White)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write("(");
@@ -205,7 +217,7 @@ namespace Dvonn_Console
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(")");
                     }
-                    if (containsDvonn == true && Toppiece.pieceType == pieceID.Black)
+                    if (containsDvonn == true && Toppiece.pieceType == PieceID.Black)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write("(");
@@ -238,22 +250,26 @@ namespace Dvonn_Console
         }
 
 
-        public void MakeMove(int[] moveCombo, pieceID Color)
+        public void MakeMove(int[] moveCombo)
         {
             entireBoard[moveCombo[1]].stack.AddRange(entireBoard[moveCombo[0]].stack);
             entireBoard[moveCombo[0]].stack.Clear();
 
-            typeWriter.MoveComment(moveCombo, Color);
-
         }
 
-        public void UndoMove(int[] moveCombo, int pieceCount)
+        public void UndoMove(int[] moveCombo, int sourcePieceCount)
         {
-            entireBoard[moveCombo[0]].stack = entireBoard[moveCombo[1]].stack;
 
-            int beginIndex = entireBoard[moveCombo[1]].stack.Count - pieceCount;
-            entireBoard[moveCombo[0]].stack.RemoveRange( 0 , beginIndex);
-            entireBoard[moveCombo[1]].stack.RemoveRange(beginIndex, pieceCount);
+            List<Piece> withdrawnPieces = new List<Piece>();
+            for (int i = 0; i < sourcePieceCount; i++)
+            {
+                Piece piece = entireBoard[moveCombo[1]].TopPiece();
+                withdrawnPieces.Add(piece);
+                entireBoard[moveCombo[1]].DeleteTopPiece();
+
+            }
+            withdrawnPieces.Reverse();
+            entireBoard[moveCombo[0]].stack = withdrawnPieces;
 
         }
 

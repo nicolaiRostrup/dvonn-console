@@ -17,14 +17,14 @@ namespace Dvonn_Console
         {
             Position position = new Position();
 
-            position = DistributePieces(position, dvonnCount, pieceID.Dvonn);
-            position = DistributePieces(position, whiteCount, pieceID.White);
-            position = DistributePieces(position, blackCount, pieceID.Black);
+            position = DistributePieces(position, dvonnCount, PieceID.Dvonn);
+            position = DistributePieces(position, whiteCount, PieceID.White);
+            position = DistributePieces(position, blackCount, PieceID.Black);
 
             return position;
         }
 
-        public Position DistributePieces(Position position, int pieceCount, pieceID pieceColor)
+        public Position DistributePieces(Position position, int pieceCount, PieceID pieceColor)
         {
             Random rGen = new Random();
 

@@ -30,6 +30,13 @@ namespace Dvonn_Console
             else return null;
         }
 
+        public void DeleteTopPiece()
+        {
+            if (stack.Count > 0) stack.RemoveAt(stack.Count - 1);
+            
+        }
+
+
         public Field NextField(directionID direction)
         {
             if (direction == directionID.NE) return NE;

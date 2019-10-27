@@ -11,14 +11,14 @@ namespace Dvonn_Console
 
         Writer typeWriter = new Writer();
 
-        Board dvonnBoard;
+        public Board dvonnBoard;
 
         public Rules(Board dvonnBoard)
         {
             this.dvonnBoard = dvonnBoard;
         }
 
-        public List<int> LegalSources(pieceID Color)
+        public List<int> LegalSources(PieceID Color)
         {
             List<int> legalSources = new List<int>();
 
@@ -77,8 +77,8 @@ namespace Dvonn_Console
                 Field chosenField = dvonnBoard.entireBoard[i];
 
                 if (chosenField.stack.Count == 0) continue;
-                if (chosenField.TopPiece().pieceType == pieceID.White) whiteScore += chosenField.stack.Count;
-                if (chosenField.TopPiece().pieceType == pieceID.Black) blackScore += chosenField.stack.Count;
+                if (chosenField.TopPiece().pieceType == PieceID.White) whiteScore += chosenField.stack.Count;
+                if (chosenField.TopPiece().pieceType == PieceID.Black) blackScore += chosenField.stack.Count;
             }
 
             score[0] = whiteScore;
@@ -111,7 +111,7 @@ namespace Dvonn_Console
             // gets the Fields that contains dvonn pieces and makes them held
             foreach (Field field in dvonnBoard.entireBoard)
             {
-                if (field.stack.Any(p => p.pieceType == pieceID.Dvonn))
+                if (field.stack.Any(p => p.pieceType == PieceID.Dvonn))
                 {
                     heldFields.Add(field);
                 }
@@ -172,16 +172,16 @@ namespace Dvonn_Console
 
         public bool GameEndCondition()
         {
-            if (LegalMoves(pieceID.White) == 0 && LegalMoves(pieceID.Black) == 0) return true;
+            if (LegalMoves(PieceID.White) == 0 && LegalMoves(PieceID.Black) == 0) return true;
             else return false;
         }
-        public bool PassCondition(pieceID Color)
+        public bool PassCondition(PieceID Color)
         {
             if (LegalMoves(Color) == 0) return true;
             else return false;
         }
 
-        public int LegalMoves(pieceID Color)
+        public int LegalMoves(PieceID Color)
         {
             int legalMoves = 0;
 
