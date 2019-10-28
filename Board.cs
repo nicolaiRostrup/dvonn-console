@@ -118,9 +118,9 @@ namespace Dvonn_Console
 
             for (int i = 0; i < 49; i++)
             {
-                foreach (Piece piece in position.stacks[i])
+                foreach (char c in position.stacks[i])
                 {
-                    entireBoard[i].stack.Add(new Piece(piece.pieceType));
+                    entireBoard[i].stack.Add(new Piece (GetPieceType(c)));
                 }
 
             }
@@ -132,11 +132,9 @@ namespace Dvonn_Console
             Position result = new Position();
             for (int i = 0; i < 49; i++)
             {   
-                result.stacks[i] = new List<Piece>();
-
                 foreach (Piece piece in entireBoard[i].stack)
                 {
-                    result.stacks[i].Add(new Piece(piece.pieceType));
+                    result.stacks[i] += GetChar(piece.pieceType);
                 }
 
             }
@@ -144,6 +142,25 @@ namespace Dvonn_Console
 
         }
 
+        PieceID GetPieceType(char c)
+        {
+
+            if (c == 'W') return PieceID.White;
+            if (c == 'B') return PieceID.Black;
+            if (c == 'D') return PieceID.Dvonn;
+
+            else return PieceID.Neutral;
+        }
+
+        char GetChar(PieceID pieceColor)
+        {
+            if (pieceColor == PieceID.Black) return 'B';
+            if (pieceColor == PieceID.White) return 'W';
+            if (pieceColor == PieceID.Dvonn) return 'D';
+
+            else return 'e'; //e for error;
+
+        }
 
         public void Clear()
         {

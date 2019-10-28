@@ -6,44 +6,64 @@ using System.Collections.Generic;
 namespace Dvonn_Console
 {
 
-    public class PositionTree
+    class PositionTree
     {
-        Node root;
-        public List<Node> allNodes = new List<Node>();
-
+        public Node root;
+        public List<Node> currentEndPoints = new List<Node>();
+        public uint totalNodes = 0;
+        int nodeCounter = 0;
 
         public PositionTree(Position rootPosition)
         {
             root = new Node(rootPosition);
             root.depth = 0;
-            allNodes.Add(root);
+            currentEndPoints.Add(root);
+            totalNodes++;
+
         }
 
 
-        public void InsertChild(Position position, Node parent, int depth)
+        public void InsertChild(Node childNode, Node parent)
         {
-            Node childNode = new Node(position);
-            childNode.depth = depth;
             parent.children.Add(childNode);
             childNode.parent = parent;
-            allNodes.Add(childNode);
-            
+            totalNodes++;
+
+        }
+
+        public void FinishBranching(Node parent)
+        {
+            currentEndPoints.Remove(parent);
+            foreach (Node child in parent.children) currentEndPoints.Add(child);
+
         }
 
 
         public string DisplayTree(int maxNodes)
         {
-            if (allNodes.Count == 0) return "Tree is empty.";
+            if (root == null) return "Tree is empty.";
 
             string result = "";
 
-            int nodeCounter = 0;
-
-            for (int i = 0; i < allNodes.Count; i++)
+            nodeCounter = 0;
+            while (nodeCounter < maxNodes)
             {
-                result += "Position #" + nodeCounter + " at depth " + allNodes[i].depth + " contains " + allNodes[i].position.NumberOfStacks() + " stacks and evaluates to " + allNodes[i].position.evaluation + "\n";
+                result += PrintBranches(root);
+
+            }
+
+            return result;
+
+        }
+
+        string PrintBranches(Node thisNode)
+        {
+            string result = "";
+            foreach (Node child in thisNode.children)
+            {
+                result += "Position #" + nodeCounter + " at depth " + thisNode.depth + " contains " + thisNode.position.NumberOfStacks() + " stacks and evaluates to " + thisNode.position.evaluation + "\n";
                 nodeCounter++;
-                if (nodeCounter == maxNodes) break;
+                result += PrintBranches(child);
 
             }
 

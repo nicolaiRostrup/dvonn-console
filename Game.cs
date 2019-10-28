@@ -32,15 +32,24 @@ namespace Dvonn_Console
             {
                 int rNum = rGen.Next(0, 49);
 
-                if (position.stacks[rNum] == null)
+                if (position.stacks[rNum].Length == 0)
                 {
-                    position.stacks[rNum] = new List<Piece>();
-                    position.stacks[rNum].Add(new Piece(pieceColor));
+                    position.stacks[rNum] += GetChar(pieceColor);
                 }
                 else pieceCount++; //the field was occupied, run the loop once again.
             }
 
             return position;
+
+        }
+
+        char GetChar(PieceID pieceColor)
+        {
+            if (pieceColor == PieceID.Black) return 'B';
+            if (pieceColor == PieceID.White) return 'W';
+            if (pieceColor == PieceID.Dvonn) return 'D';
+
+            else return 'e'; //e for error;
 
         }
 

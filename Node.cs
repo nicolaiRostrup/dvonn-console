@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Dvonn_Console
 {
-    public class Node
+    class Node
     {
         public Position position;
         public List<Node> children = new List<Node>();
@@ -15,6 +15,12 @@ namespace Dvonn_Console
         public Node(Position position)
         {
             this.position = position;
+
+        }
+
+        public Node()
+        {
+            
 
         }
     }
