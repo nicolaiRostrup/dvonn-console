@@ -110,7 +110,30 @@ namespace Dvonn_Console
 
         public float EvaluatePosition(Position position)
         {
+            /*Should count as POSITIVE:
+            Short distance to dvonn piece.
+            Number of controlled stacks.
+            Low number of opponent controlled stacks.
+            Number of possible moves.
+            Low number of opponent possible moves.
+            Number of movable stacks
+            Low number of opponent movable stacks
+            High score/low score for opponent
+            If a piece can land on top of dvonn piece or tower with dvonn piece.
+            + Number of pieces that can do that.
+            (In the endgame: to isolate a large stack under your control).
+            Capture pieces that are about to capture important stacks.
+            Moving a piece towards a dvonn piece.
+            In the early phase build low. One own color piece on top of one enemy piece.
+            */
 
+            /*Should count as NEGATIVE:
+            To build high towers
+
+
+            
+
+            */
             return 0f;
 
         }

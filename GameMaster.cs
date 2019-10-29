@@ -176,6 +176,8 @@ namespace Dvonn_Console
                         dvonnBoard.VisualizeBoard();
                         typeWriter.MoveComment(rndMove, PieceID.White);
                         WaitForUser();
+                        //After move 20 a deep search should be done at every turn, to seek for decisive lines, max positions 150.000
+                        //Before move 20, only shallow searches, e.g 3 or 4.
                         aiAgent.CreateTree(dvonnBoard.SendPosition(), 10);
                         //Console.WriteLine(aiAgent.PrintTree(50000));
                         break;
