@@ -77,7 +77,7 @@ namespace Dvonn_Console
 
                         dvonnTree.InsertChild(new Node(newPosition), endPoint);
                         nodeCounter++;
-                        
+
 
                     }
 
@@ -86,8 +86,8 @@ namespace Dvonn_Console
 
             }
 
-            foreach(Node endPoint in formerEndPoints) dvonnTree.FinishBranching(endPoint);
-            
+            foreach (Node endPoint in formerEndPoints) dvonnTree.FinishBranching(endPoint);
+
             Console.Write("AI: added " + nodeCounter + " positions to position tree for color " + player + "\n");
             Console.Write("AI: new number of endpoints in tree = " + dvonnTree.currentEndPoints.Count + "\n");
             Console.Write("AI: total number of nodes in tree = " + dvonnTree.totalNodes + "\n");
@@ -116,24 +116,51 @@ namespace Dvonn_Console
             Low number of opponent controlled stacks.
             Number of possible moves.
             Low number of opponent possible moves.
+
             Number of movable stacks
             Low number of opponent movable stacks
             High score/low score for opponent
+
             If a piece can land on top of dvonn piece or tower with dvonn piece.
             + Number of pieces that can do that.
+
             (In the endgame: to isolate a large stack under your control).
             Capture pieces that are about to capture important stacks.
+
             Moving a piece towards a dvonn piece.
+
             In the early phase build low. One own color piece on top of one enemy piece.
             */
 
             /*Should count as NEGATIVE:
             To build high towers
 
+            */
 
+            /*
+            PiecesToHitDvonn(pieceColor); regardless of its a legal move and regardless of the dvonn piece being somehwere within a tower.
+
+            ControlledStacks(pieceColor); has color on top, regardless of its a legal source
+
+            MovableStacks(pieceColor); = legal sources
+
+            PossibleMoves(pieceColor); legalsources * legaltargets...
+
+            Score(pieceColor)
             
+            DistanceToDvonnpiece() return int - the smaller the better
+
+            bool isOwnPieceOnOpponentPiece
+
+
+
 
             */
+
+
+
+
+
             return 0f;
 
         }
