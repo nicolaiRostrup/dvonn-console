@@ -12,6 +12,30 @@ namespace Dvonn_Console
         Dvonn, White, Black, Neutral
     }
 
+    public static class PieceIDExtensions
+    {
+        public static char ToChar(this PieceID id)
+        {
+            if (id == PieceID.Dvonn) return 'D';
+            if (id == PieceID.White) return 'W';
+            if (id == PieceID.Black) return 'B';
+            if (id == PieceID.Neutral) return 'N';
+
+            throw new ArgumentException("Unexpected piece id received: " + id.ToString());
+
+        }
+
+        public static PieceID ToOpposite(this PieceID id)
+        {
+            if (id == PieceID.White) return PieceID.Black;
+            if (id == PieceID.Black) return PieceID.White;
+
+            throw new ArgumentException("Unexpected piece id received: " + id.ToString());
+
+        }
+
+    }
+
     public class Piece
     {
         public PieceID pieceType;

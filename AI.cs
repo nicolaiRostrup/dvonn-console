@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dvonn_Console
 {
@@ -12,7 +9,12 @@ namespace Dvonn_Console
         Rules ruleBook;
         PositionTree dvonnTree;
         int nodeCounter = 0;
+
         PieceID currentPlayer;
+        PieceID humanPlayerColor;
+        Move lastMove;
+        Move contemplatedMove;
+        Move proposedMove;
 
         public AI()
         {
@@ -71,13 +73,12 @@ namespace Dvonn_Console
 
                         if (localCounter > 2) break;
 
-                        int[] moveCombo = { sourceIndex, targetIndex };
+                        Move thisMove = new Move(sourceIndex, targetIndex, currentPlayer);
                         Position newPosition = aiBoard.SendPosition();
-                        newPosition.MakeMove(moveCombo);
+                        newPosition.MakeMove(thisMove);
 
-                        dvonnTree.InsertChild(new Node(newPosition), endPoint);
+                        dvonnTree.InsertChild(new Node(newPosition, thisMove), endPoint);
                         nodeCounter++;
-
 
                     }
 
@@ -105,6 +106,11 @@ namespace Dvonn_Console
         {
             if (currentPlayer == PieceID.Black) currentPlayer = PieceID.White;
             else currentPlayer = PieceID.Black;
+
+        }
+
+        void PruneEndPoints()
+        {
 
         }
 
@@ -138,30 +144,55 @@ namespace Dvonn_Console
             */
 
             /*
-            PiecesToHitDvonn(pieceColor); regardless of its a legal move and regardless of the dvonn piece being somehwere within a tower.
+            
+            Methods needed (all aply to situation after stack has been moved to chosen target, and concerns the properties of the resulting target:
+         
+            - DistanceToDvonn() return int - the smaller the better. Regardless of its a legal move and regardless of the dvonn piece being somehwere within a tower.
 
-            ControlledStacks(pieceColor); has color on top, regardless of its a legal source
+            - ControlledStacks(pieceColor); has color on top, regardless of its a legal source
 
-            MovableStacks(pieceColor); = legal sources
+            MovableStacks(pieceColor); equals 'legal sources'
 
             PossibleMoves(pieceColor); legalsources * legaltargets...
 
             Score(pieceColor)
-            
-            DistanceToDvonnpiece() return int - the smaller the better
+           
+            int DvonnLanders - A lander is here defined as a stack that may hit a dvonnn containing stack with a legal move - regardless of one of these landers being the resulting target tower.
 
             bool isOwnPieceOnOpponentPiece
 
-
+            TowerHeight()
 
 
             */
 
-
-
-
-
             return 0f;
+
+        }
+
+        int DistanceToDvonn(Position thisPosition, Move lastMove)
+        {
+            aiBoard.ReceivePosition(thisPosition);
+            return aiBoard.GetDistanceToDvonn(lastMove);
+
+        }
+
+        int ControlledStacks(Position thisPosition, PieceID color)
+        {
+            int controlledStacks = 0;
+            for (int i = 0; i < 49; i++)
+            {
+                if (thisPosition.stacks[i].Length == 0) continue;
+                if (thisPosition.TopPiece(i) == color.ToChar()) controlledStacks++;
+            }
+            return controlledStacks;
+
+        }
+
+        int MovableStacks(Position thisPosition, Move lastMove)
+        {
+            aiBoard.ReceivePosition(thisPosition);
+            return ruleBook.LegalSources(lastMove.responsibleColor).Count;
 
         }
 

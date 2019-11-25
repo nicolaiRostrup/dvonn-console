@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
@@ -16,6 +15,7 @@ namespace Dvonn_Console
         Writer typeWriter = new Writer();
         public Field[] entireBoard = new Field[49];
         public List<Tuple<int, int, int>> allPrincipalMoves = new List<Tuple<int, int, int>>();
+        List<directionID> allDirections = new List<directionID> { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
 
         public void CalculatePrincipalMoves()
         {
@@ -120,7 +120,7 @@ namespace Dvonn_Console
             {
                 foreach (char c in position.stacks[i])
                 {
-                    entireBoard[i].stack.Add(new Piece (GetPieceType(c)));
+                    entireBoard[i].stack.Add(new Piece(GetPieceType(c)));
                 }
 
             }
@@ -131,7 +131,7 @@ namespace Dvonn_Console
         {
             Position result = new Position();
             for (int i = 0; i < 49; i++)
-            {   
+            {
                 foreach (Piece piece in entireBoard[i].stack)
                 {
                     result.stacks[i] += GetChar(piece.pieceType);
@@ -144,7 +144,6 @@ namespace Dvonn_Console
 
         PieceID GetPieceType(char c)
         {
-
             if (c == 'W') return PieceID.White;
             if (c == 'B') return PieceID.Black;
             if (c == 'D') return PieceID.Dvonn;
@@ -290,6 +289,44 @@ namespace Dvonn_Console
 
         }
 
+        public int GetDistanceToDvonn(Move lastMove)
+        {
+            Field targetField = entireBoard[lastMove.target];
+
+            if (targetField.stack.FindAll(piece => piece.pieceType == PieceID.Dvonn).Count > 0) return 0;
+
+            else
+            {
+                List<int> shortPathsToDvonn = new List<int>();
+
+                foreach (directionID direction in allDirections)
+                {
+                    int counter = 0;
+                    Field runningField = targetField;
+                    while (true)
+                    {
+                        counter++;
+                        runningField = runningField.GetNeighbour(direction);
+
+                        if (runningField == null) break;
+                        if (runningField.stack.Count == 0) continue;
+
+                        if (runningField.stack.FindAll(piece => piece.pieceType == PieceID.Dvonn).Count > 0)
+                        {
+                            shortPathsToDvonn.Add(counter);
+                            break;
+                        }
+                    }
+                }
+                shortPathsToDvonn.Sort();
+                return shortPathsToDvonn[0];
+
+            }
+
+
+        }
+
 
     }
+
 }

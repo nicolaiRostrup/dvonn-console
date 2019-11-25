@@ -43,13 +43,13 @@ namespace Dvonn_Console
 
         }
 
-        char GetChar(PieceID pieceColor)
+        char? GetChar(PieceID pieceColor)
         {
             if (pieceColor == PieceID.Black) return 'B';
             if (pieceColor == PieceID.White) return 'W';
             if (pieceColor == PieceID.Dvonn) return 'D';
 
-            else return 'e'; //e for error;
+            else return null;
 
         }
 

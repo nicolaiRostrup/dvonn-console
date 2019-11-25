@@ -10,11 +10,13 @@ namespace Dvonn_Console
         public List<Node> children = new List<Node>();
         public Node parent = null;
         public int depth;
+        public Move lastMove; //the move that resulted in this position
 
 
-        public Node(Position position)
+        public Node(Position position, Move lastMove)
         {
             this.position = position;
+            this.lastMove = lastMove;
 
         }
 

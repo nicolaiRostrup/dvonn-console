@@ -47,6 +47,7 @@
     <Compile Include="Board.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Move.cs" />
     <Compile Include="Node.cs" />
     <Compile Include="Piece.cs" />
     <Compile Include="Position.cs" />

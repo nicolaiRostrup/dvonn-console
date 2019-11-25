@@ -11,18 +11,17 @@ namespace Dvonn_Console
         public string[] stacks = new string[49];
         public float evaluation = 0f;
 
-
         public Position()
         {
             for (int i = 0; i < 49; i++) stacks[i] = "";
         }
 
-        //public char TopPiece(int fieldID)
-        //{
-        //    int stackCount = stacks[fieldID].Length;
-        //    if (stackCount > 0) return stacks[fieldID][ stackCount - 1];
-        //    else return 'e'; //e for empty
-        //}
+        public char? TopPiece(int fieldID)
+        {
+            int stackCount = stacks[fieldID].Length;
+            if (stackCount > 0) return stacks[fieldID][stackCount - 1];
+            else return null;
+        }
 
         public int NumberOfStacks()
         {
@@ -43,10 +42,10 @@ namespace Dvonn_Console
             return edgeFields.Contains(fieldID);
         }
 
-        public void MakeMove(int[] moveCombo)
+        public void MakeMove(Move move)
         {
-            stacks[moveCombo[1]] += stacks[moveCombo[0]];
-            stacks[moveCombo[0]] = "";
+            stacks[move.target] += stacks[move.source];
+            stacks[move.source] = "";
         }
 
     }

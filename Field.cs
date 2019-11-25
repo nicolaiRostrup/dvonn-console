@@ -22,7 +22,7 @@ namespace Dvonn_Console
         public Field WE;
         public Field NW;
 
-        
+
 
         public Piece TopPiece()
         {
@@ -33,7 +33,7 @@ namespace Dvonn_Console
         public void DeleteTopPiece()
         {
             if (stack.Count > 0) stack.RemoveAt(stack.Count - 1);
-            
+
         }
 
 
@@ -62,6 +62,17 @@ namespace Dvonn_Console
             return theseNeighbours;
         }
 
+        public Field GetNeighbour(directionID dir)
+        {
+            if (dir == directionID.NE) return (NE != null) ? NE: null;
+            if (dir == directionID.EA) return (EA != null) ? EA : null;
+            if (dir == directionID.SE) return (SE != null) ? SE : null;
+            if (dir == directionID.SW) return (SW != null) ? SW : null;
+            if (dir == directionID.WE) return (WE != null) ? WE : null;
+            if (dir == directionID.NW) return (NW != null) ? NW : null;
+            else throw new ArgumentException("Direction id not supported : " + dir.ToString());
+        }
+
         public override string ToString()
         {
             string returnString;
@@ -69,11 +80,11 @@ namespace Dvonn_Console
             else
             {
                 returnString = "Field " + fieldName + " has a stack that consists of " + stack.Count + " pieces. They are: (From bottom and up) ";
-                foreach(Piece p in stack)
+                foreach (Piece p in stack)
                 {
                     returnString += p.pieceType + ", ";
                 }
-                
+
             }
             return returnString;
         }
