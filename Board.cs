@@ -19,11 +19,8 @@ namespace Dvonn_Console
 
         public void CalculatePrincipalMoves()
         {
-            directionID[] Directions = { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
-
-
             // find all legal moves in any direction for any field
-            foreach (directionID Direction in Directions)
+            foreach (directionID direction in allDirections)
             {
                 for (int i = 0; i < 49; i++) // For samtlige felter undersøges...
                 {
@@ -31,7 +28,7 @@ namespace Dvonn_Console
 
                     for (int jump = 1; jump < 11; jump++) // Antal jumps er max 10, idet 10 er det længst mulige jump i Dvonn (c0/ct).
                     {
-                        Field nextField = sourceField.NextField(Direction);
+                        Field nextField = sourceField.NextField(direction);
                         if (nextField != null)
                         {
                             allPrincipalMoves.Add(Tuple.Create(i, nextField.index, jump));
@@ -39,6 +36,7 @@ namespace Dvonn_Console
                         }
 
                         //AllPrincipalMoves.Count=786
+                        //Item1 = source, Item2 = target, Item 3 = jumps (number of pieces in source stack).
 
                     }
                 }
@@ -114,7 +112,7 @@ namespace Dvonn_Console
 
         public void ReceivePosition(Position position)
         {
-            Clear();
+            ClearBoard();
 
             for (int i = 0; i < 49; i++)
             {
@@ -161,7 +159,7 @@ namespace Dvonn_Console
 
         }
 
-        public void Clear()
+        public void ClearBoard()
         {
             foreach (Field field in entireBoard)
             {
@@ -326,7 +324,44 @@ namespace Dvonn_Console
 
         }
 
+        public List<int> GetDvonnStacks()
+        {
+            List<int> dvonnStacks = new List<int>();
 
+            for (int i = 0; i < 49; i++)
+            {
+                if (entireBoard[i].stack.Count == 0) continue;
+
+                foreach (Piece piece in entireBoard[i].stack)
+                {
+                    if (piece.pieceType == PieceID.Dvonn) dvonnStacks.Add(i);
+                }
+
+            }
+            return dvonnStacks;
+
+        }
+
+        public List<int> GetLanders(int targetID, PieceID color)
+        {
+            List<int> landers = new List<int>();
+
+            //i is here sourceID
+            for (int i = 0; i < 49; i++)
+            {   
+                int pieceCount = entireBoard[i].stack.Count;
+                if (pieceCount == 0) continue;
+                if (i == targetID) continue;
+                if (entireBoard[i].TopPiece().pieceType != color) continue;
+
+                for (int j = 0; j < 786; j++)
+                {
+                    if (allPrincipalMoves[j].Item1 == i && allPrincipalMoves[j].Item2 == targetID && allPrincipalMoves[j].Item3 == pieceCount) landers.Add(i);
+                
+                }
+
+            }
+            return landers;
+        }
     }
-
 }

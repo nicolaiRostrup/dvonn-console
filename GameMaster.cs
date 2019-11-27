@@ -153,7 +153,7 @@ namespace Dvonn_Console
                         break;
 
                     case "7": // "Secret" option that lets developer create endgame scenario for test purposes
-                        dvonnBoard.Clear();
+                        dvonnBoard.ClearBoard();
                         Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
                         dvonnBoard.ReceivePosition(partialDvonnGame);
                         ruleBook.CheckDvonnCollapse();

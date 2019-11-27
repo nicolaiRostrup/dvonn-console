@@ -151,13 +151,13 @@ namespace Dvonn_Console
 
             - ControlledStacks(pieceColor); has color on top, regardless of its a legal source
 
-            MovableStacks(pieceColor); equals 'legal sources'
+            - MovableStacks(pieceColor); equals 'legal sources'
 
-            PossibleMoves(pieceColor); legalsources * legaltargets...
+            - PossibleMoves(pieceColor); legalsources * legaltargets...
 
-            Score(pieceColor)
+            - Score(pieceColor)
            
-            int DvonnLanders - A lander is here defined as a stack that may hit a dvonnn containing stack with a legal move - regardless of one of these landers being the resulting target tower.
+            int DvonnLanders - A lander is here defined as a stack that may hit a dvonn piece or a dvonn containing stack with a legal move.
 
             bool isOwnPieceOnOpponentPiece
 
@@ -188,12 +188,53 @@ namespace Dvonn_Console
             return controlledStacks;
 
         }
-
+        
         int MovableStacks(Position thisPosition, Move lastMove)
         {
             aiBoard.ReceivePosition(thisPosition);
             return ruleBook.LegalSources(lastMove.responsibleColor).Count;
 
+        }
+
+        int PossibleMoves(Position thisPosition, Move lastMove)
+        {
+            aiBoard.ReceivePosition(thisPosition);
+            List<int> legalSources = ruleBook.LegalSources(lastMove.responsibleColor);
+            int sourceCount = legalSources.Count;
+            int targetCount = ruleBook.LegalTargets(legalSources).Count;
+
+            return sourceCount * targetCount;
+        }
+
+        int ResultingScore(Position thisPosition, Move lastMove)
+        {
+            aiBoard.ReceivePosition(thisPosition);
+            int score = 0;
+            int[] scoreArray = ruleBook.Score();
+            if (lastMove.responsibleColor == PieceID.White) score = scoreArray[0];
+            if (lastMove.responsibleColor == PieceID.Black) score = scoreArray[1];
+
+            return score;
+        }
+
+        int DvonnLanders(Position thisPosition, Move lastMove)
+        {
+            aiBoard.ReceivePosition(thisPosition);
+            List<int> legalSources = ruleBook.LegalSources(lastMove.responsibleColor);
+            List<int> dvonnStacks = aiBoard.GetDvonnStacks();
+            
+            List<int> dvonnLanders = new List<int>();
+
+            foreach(int fieldID in dvonnStacks)
+            {
+                dvonnLanders.AddRange(aiBoard.GetLanders(fieldID, lastMove.responsibleColor));
+            }
+            //Remove all sources in dvonn landers, which is not legal:
+            foreach(int i in dvonnLanders)
+            {
+                if (!legalSources.Contains(i)) dvonnLanders.Remove(i);
+            }
+            return dvonnLanders.Count;
         }
 
     }

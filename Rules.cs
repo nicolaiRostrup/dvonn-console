@@ -33,17 +33,48 @@ namespace Dvonn_Console
             return legalSources;
         }
 
+        public bool IsLegalSource(PieceID Color)
+        {
+
+
+        }
+
         public List<int> LegalTargets(int fieldID, int pieceCount)
         {
             List<int> legalTargets = new List<int>();
             // For all tupples in AllPrincipalMoves...
             for (int i = 0; i < 786; i++)
             {
-                if (dvonnBoard.allPrincipalMoves[i].Item1 == fieldID && dvonnBoard.entireBoard[dvonnBoard.allPrincipalMoves[i].Item2].stack.Count > 0 && dvonnBoard.allPrincipalMoves[i].Item3 == pieceCount)
+                int targetID = dvonnBoard.allPrincipalMoves[i].Item2;
+
+                if (dvonnBoard.allPrincipalMoves[i].Item1 == fieldID && dvonnBoard.entireBoard[targetID].stack.Count > 0 && dvonnBoard.allPrincipalMoves[i].Item3 == pieceCount)
                 {
-                    legalTargets.Add(dvonnBoard.allPrincipalMoves[i].Item2);
+                    legalTargets.Add(targetID);
                 }
 
+            }
+            return legalTargets;
+        }
+
+        public List<int> LegalTargets(List<int> sourceList)
+        {   
+            List<int> legalTargets = new List<int>();
+
+            foreach (int fieldID in sourceList)
+            {
+                int pieceCount = dvonnBoard.entireBoard[fieldID].stack.Count;
+                
+                // For all tupples in AllPrincipalMoves...
+                for (int i = 0; i < 786; i++)
+                {
+                    int targetID = dvonnBoard.allPrincipalMoves[i].Item2;
+
+                    if (dvonnBoard.allPrincipalMoves[i].Item1 == fieldID && dvonnBoard.entireBoard[targetID].stack.Count > 0 && dvonnBoard.allPrincipalMoves[i].Item3 == pieceCount)
+                    {
+                        if(!legalTargets.Contains(targetID)) legalTargets.Add(targetID);
+                        
+                    }
+                }
             }
             return legalTargets;
         }
@@ -185,15 +216,15 @@ namespace Dvonn_Console
         {
             int legalMoves = 0;
 
-            foreach (int fieldID in LegalSources(Color)) 
+            foreach (int fieldID in LegalSources(Color))
             {
                 legalMoves = legalMoves + LegalTargets(fieldID, dvonnBoard.entireBoard[fieldID].stack.Count).Count; // this line counts all legal targets for current selected position on the board...
 
             }
-            return legalMoves; 
+            return legalMoves;
         }
 
-        
+
 
 
     }
