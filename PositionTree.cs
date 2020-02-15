@@ -1,7 +1,6 @@
 ﻿
-
-using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace Dvonn_Console
 {
@@ -10,8 +9,8 @@ namespace Dvonn_Console
     {
         public Node root;
         public List<Node> currentEndPoints = new List<Node>();
-        public uint totalNodes = 0;
-        int nodeCounter = 0;
+        public long totalNodes = 0;
+        
 
         public PositionTree(Position rootPosition)
         {
@@ -19,7 +18,7 @@ namespace Dvonn_Console
             root.depth = 0;
             currentEndPoints.Add(root);
             totalNodes++;
-
+            root.id = totalNodes;
         }
 
 
@@ -27,47 +26,72 @@ namespace Dvonn_Console
         {
             parent.children.Add(childNode);
             childNode.parent = parent;
+            childNode.depth = parent.depth + 1;
+            currentEndPoints.Add(childNode);
             totalNodes++;
-
+            childNode.id = totalNodes;
         }
 
-        public void FinishBranching(Node parent)
+        int GetDepthReach()
         {
-            currentEndPoints.Remove(parent);
-            foreach (Node child in parent.children) currentEndPoints.Add(child);
-
-        }
-
-
-        public string DisplayTree(int maxNodes)
-        {
-            if (root == null) return "Tree is empty.";
-
-            string result = "";
-
-            nodeCounter = 0;
-            while (nodeCounter < maxNodes)
+            int depthCounter = 0;
+            foreach (Node node in currentEndPoints)
             {
-                result += PrintBranches(root);
+                if (node.depth > depthCounter) depthCounter = node.depth;
 
             }
-
-            return result;
-
+            return depthCounter;
         }
 
-        string PrintBranches(Node thisNode)
-        {
-            string result = "";
-            foreach (Node child in thisNode.children)
-            {
-                result += "Position #" + nodeCounter + " at depth " + thisNode.depth + " contains " + thisNode.position.NumberOfStacks() + " stacks and evaluates to " + thisNode.position.evaluation + "\n";
-                nodeCounter++;
-                result += PrintBranches(child);
 
+        //For developer purposes...
+        public override string ToString() {
+
+            int depthReach = GetDepthReach();
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine("This is a report of the contents of current AI position tree");
+            sb.AppendLine("The tree contains a total of " + totalNodes + " nodes.");
+            sb.AppendLine("The tree has " + currentEndPoints.Count + " number of active endpoints.");
+            sb.AppendLine("The tree has a depth reach of " + depthReach);
+            sb.AppendLine("At depth 0, root position has an evaluation of: " + root.position.evaluation + " and contains " + root.position.NumberOfStacks() + " stacks");
+
+            List<Node> parentNodes = new List<Node>();
+            List<Node> childNodes = new List<Node>();
+            parentNodes.Add(root);
+            for (int i = 1; i <= depthReach; i++)
+            {
+                long generationNodeCounter = 0L;
+                double totalEvaluation = 0.0;
+                long totalStackCount = 0L;
+                
+                foreach(Node parent in parentNodes)
+                {
+                    foreach(Node child in parent.children)
+                    {
+                        if (child.isStub) continue;
+                        generationNodeCounter++;
+                        totalEvaluation += child.position.evaluation;
+                        totalStackCount += child.position.NumberOfStacks();
+
+                        childNodes.Add(child);
+                    }
+
+                }
+                float meanEvaluation = (float)(totalEvaluation / generationNodeCounter);
+                float meanStackCount = totalStackCount / generationNodeCounter;
+
+                sb.AppendLine("At depth " + i + " is placed " + generationNodeCounter + " number of nodes with a mean evaluation of: " + meanEvaluation + ", and a mean stack count of " + meanStackCount);
+
+                parentNodes.Clear();
+                foreach (Node child in childNodes)
+                {
+                    parentNodes.Add(child);
+                }
+                childNodes.Clear();
             }
 
-            return result;
+            return sb.ToString();
 
         }
 

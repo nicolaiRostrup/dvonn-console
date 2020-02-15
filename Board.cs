@@ -120,9 +120,7 @@ namespace Dvonn_Console
                 {
                     entireBoard[i].stack.Add(new Piece(GetPieceType(c)));
                 }
-
             }
-
         }
 
         public Position SendPosition()
@@ -134,10 +132,8 @@ namespace Dvonn_Console
                 {
                     result.stacks[i] += GetChar(piece.pieceType);
                 }
-
             }
             return result;
-
         }
 
         PieceID GetPieceType(char c)
@@ -164,11 +160,8 @@ namespace Dvonn_Console
             foreach (Field field in entireBoard)
             {
                 field.stack.Clear();
-
             }
-
         }
-
 
         public void VisualizeBoard()
         {
@@ -264,26 +257,26 @@ namespace Dvonn_Console
         }
 
 
-        public void MakeMove(int[] moveCombo)
+        public void MakeMove(Move thisMove)
         {
-            entireBoard[moveCombo[1]].stack.AddRange(entireBoard[moveCombo[0]].stack);
-            entireBoard[moveCombo[0]].stack.Clear();
+            entireBoard[thisMove.target].stack.AddRange(entireBoard[thisMove.source].stack);
+            entireBoard[thisMove.source].stack.Clear();
 
         }
 
-        public void UndoMove(int[] moveCombo, int sourcePieceCount)
+        public void UndoMove(Move thisMove, int sourcePieceCount)
         {
 
             List<Piece> withdrawnPieces = new List<Piece>();
             for (int i = 0; i < sourcePieceCount; i++)
             {
-                Piece piece = entireBoard[moveCombo[1]].TopPiece();
+                Piece piece = entireBoard[thisMove.target].TopPiece();
                 withdrawnPieces.Add(piece);
-                entireBoard[moveCombo[1]].DeleteTopPiece();
+                entireBoard[thisMove.target].DeleteTopPiece();
 
             }
             withdrawnPieces.Reverse();
-            entireBoard[moveCombo[0]].stack = withdrawnPieces;
+            entireBoard[thisMove.source].stack = withdrawnPieces;
 
         }
 

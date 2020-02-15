@@ -1,6 +1,4 @@
-﻿
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Dvonn_Console
 {
@@ -9,9 +7,11 @@ namespace Dvonn_Console
         public Position position;
         public List<Node> children = new List<Node>();
         public Node parent = null;
-        public int depth;
         public Move lastMove; //the move that resulted in this position
-
+        public bool isEndPoint = true;
+        public bool isStub = false;
+        public int depth;
+        public long id;
 
         public Node(Position position, Move lastMove)
         {
@@ -20,12 +20,11 @@ namespace Dvonn_Console
 
         }
 
-        public Node()
+        public Node(Position position)
         {
-            
+            this.position = position;
 
         }
     }
-
 
 }

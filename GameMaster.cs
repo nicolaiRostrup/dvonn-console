@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
@@ -16,21 +15,28 @@ namespace Dvonn_Console
         StackInspector stackInspector;
         AI aiAgent;
 
-
         public void BeginNewGame()
         {
             typeWriter.WelcomeText();
+
+            //todo: should be an option to choose these two booleans
+            //todo: should be an option to choose color
+            dvonnGame = new Game(true, true, PieceID.White);
 
             dvonnBoard = new Board();
             dvonnBoard.InstantiateFields();
             dvonnBoard.CalculatePrincipalMoves();
             ruleBook = new Rules(dvonnBoard);
             stackInspector = new StackInspector(dvonnBoard);
-            aiAgent = new AI();
-
-            dvonnGame = new Game();
-            Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
-            dvonnBoard.ReceivePosition(randomPosition);
+            
+            if(dvonnGame.isAiDriven) aiAgent = new AI();
+            if(dvonnGame.isRandomPopulated)
+            {
+                Position randomPosition = dvonnGame.RandomPopulateWithCorrection();
+                //Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
+                dvonnBoard.ReceivePosition(randomPosition);
+            }
+            
             dvonnBoard.VisualizeBoard();
 
             RunGameMenu();
@@ -42,7 +48,6 @@ namespace Dvonn_Console
 
             while (gamerunning)
             {
-
                 typeWriter.MenuText();
 
                 string input = Console.ReadLine();
@@ -51,9 +56,9 @@ namespace Dvonn_Console
                 {
                     case "1": // Enter move ...
 
-                        int[] moveCombo = GetUserMoveInput();
+                        Move chosenMove = GetUserMoveInput();
 
-                        if (moveCombo[0] == 0 && moveCombo[1] == 0) // a special situation, where user wants to go back to menu
+                        if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
                         {
                             dvonnBoard.VisualizeBoard();
                             break;
@@ -61,9 +66,9 @@ namespace Dvonn_Console
                         else
                         {   
                             // else, if user doesn't want to go back to menu, execute move...
-                            dvonnBoard.MakeMove(moveCombo);
+                            dvonnBoard.MakeMove(chosenMove);
                             dvonnBoard.VisualizeBoard();
-                            typeWriter.MoveComment(moveCombo, PieceID.White);
+                            typeWriter.MoveComment(chosenMove, PieceID.White);
 
                         }
                         //Do a check for dvonn collapse, and if true, execute and make comment.
@@ -88,10 +93,22 @@ namespace Dvonn_Console
                         Console.WriteLine();
                         Console.WriteLine("Black is ready to move");
                         WaitForUser();
-                        int[] randomMove = CreateRandomMove(PieceID.Black);
-                        dvonnBoard.MakeMove(randomMove);
-                        dvonnBoard.VisualizeBoard();
-                        typeWriter.MoveComment(randomMove, PieceID.Black);
+                        if (dvonnGame.isAiDriven)
+                        {
+                            Move aiMove = aiAgent.ComputeAiMove(dvonnBoard.SendPosition(), PieceID.Black);
+                            WaitForUser();
+                            dvonnBoard.MakeMove(aiMove);
+                            dvonnBoard.VisualizeBoard();
+                            typeWriter.MoveComment(aiMove, PieceID.Black);
+                        }
+                        else
+                        {
+                            Move randomMove = CreateRandomMove(PieceID.Black);
+                            dvonnBoard.MakeMove(randomMove);
+                            dvonnBoard.VisualizeBoard();
+                            typeWriter.MoveComment(randomMove, PieceID.Black);
+                        }
+                        //Do a check for dvonn collapse, and if true, execute and make comment.
                         ruleBook.CheckDvonnCollapse();
 
                         //Again, this time after blacks move, check whether game has ended.
@@ -107,8 +124,8 @@ namespace Dvonn_Console
                         if (ruleBook.PassCondition(PieceID.White) == true)
                         {
                             RepeatedRandomMove();
-                            if (ruleBook.LegalMoves(PieceID.White) != 0) break; // Hvis hvid evt. skulle have fået et gyldigt træk, føres program pointeren til main menu...
-                            typeWriter.GameEndText(ruleBook.Score()); // Ellers er spillet slut.
+                            if (ruleBook.LegalMoves(PieceID.White) != 0) break; // If white should have gotten a new opportunity to move, return to main menu...
+                            typeWriter.GameEndText(ruleBook.Score()); // Otherwise, the game is over...
                             gamerunning = false; // when returned, close console
                             break;
                         }
@@ -159,29 +176,6 @@ namespace Dvonn_Console
                         ruleBook.CheckDvonnCollapse();
                         break;
 
-                    case "8": // Another "Secret" option that lets developer test AI
-                        int[] thisMoveCombo = GetUserMoveInput();
-                        int sourcePieceCount = dvonnBoard.entireBoard[thisMoveCombo[0]].stack.Count;
-                        dvonnBoard.MakeMove(thisMoveCombo);
-                        dvonnBoard.VisualizeBoard();
-                        typeWriter.MoveComment(thisMoveCombo, PieceID.White);
-                        WaitForUser();
-                        dvonnBoard.UndoMove(thisMoveCombo, sourcePieceCount);
-                        dvonnBoard.VisualizeBoard();
-                        break;
-
-                    case "9": // Yet another "Secret" option that lets developer test AI
-                        int[] rndMove = CreateRandomMove(PieceID.White);
-                        dvonnBoard.MakeMove(rndMove);
-                        dvonnBoard.VisualizeBoard();
-                        typeWriter.MoveComment(rndMove, PieceID.White);
-                        WaitForUser();
-                        //After move 20 a deep search should be done at every turn, to seek for decisive lines, max positions 150.000
-                        //Before move 20, only shallow searches, e.g 3 or 4.
-                        aiAgent.CreateTree(dvonnBoard.SendPosition(), 10);
-                        //Console.WriteLine(aiAgent.PrintTree(50000));
-                        break;
-
                     default:
                         Console.WriteLine("Unable to read input, please try again.");
                         break;
@@ -191,16 +185,16 @@ namespace Dvonn_Console
 
         }
 
-        public int[] GetUserMoveInput()
+        public Move GetUserMoveInput()
         {
-            int[] moveCombo = { 0, 0 };
+            Move chosenMove = new Move(0, 0, PieceID.White);
             string move;
             bool userInputCorrect = false;
             string[] sourceAndTarget;
 
             while (userInputCorrect == false)
             {
-                moveCombo[0] = 0; moveCombo[1] = 0;
+                chosenMove.source = 0; chosenMove.target = 0;
 
                 Console.WriteLine("Please enter your move like this: a1/a2, where");
                 Console.WriteLine("a1 is the source field, and a2 is the target field.");
@@ -209,7 +203,8 @@ namespace Dvonn_Console
 
                 if (move == "MENU")
                 {
-                    return moveCombo;
+                    //If chosenmove is default (0,0) it is handled as a 'return to menu'
+                    return chosenMove;
                 }
                 if (move.Equals("RULES"))
                 {
@@ -238,17 +233,17 @@ namespace Dvonn_Console
                     Console.WriteLine("Target field is not entered correctly.");
                     continue;
                 }
+                   
+                int source = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
+                int target = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
 
-                moveCombo[0] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
-                moveCombo[1] = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
-
-                if (!ruleBook.LegalSources(PieceID.White).Contains(moveCombo[0]))
+                if (!ruleBook.LegalSources(PieceID.White).Contains(source))
                 {
                     Console.WriteLine("The source field is not valid.");
                     Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
                     continue;
                 }
-                if (!ruleBook.LegalTargets(moveCombo[0], dvonnBoard.entireBoard[moveCombo[0]].stack.Count).Contains(moveCombo[1]))
+                if (!ruleBook.LegalTargets(source, dvonnBoard.entireBoard[source].stack.Count).Contains(target))
                 {
                     Console.WriteLine("The target field is not valid.");
                     Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
@@ -256,12 +251,13 @@ namespace Dvonn_Console
                 }
 
                 userInputCorrect = true;
+                chosenMove = new Move(source, target, PieceID.White);
             }
 
-            return moveCombo;
+            return chosenMove;
 
         }
-        public int[] CreateRandomMove(PieceID player)
+        public Move CreateRandomMove(PieceID player)
         {
             Random rGen = new Random();
 
@@ -273,10 +269,10 @@ namespace Dvonn_Console
             int randomSourceField = trueLegalSources[rGen.Next(0, trueLegalSources.Count)];
             List<int> legalTargets = ruleBook.LegalTargets(randomSourceField, dvonnBoard.entireBoard[randomSourceField].stack.Count);
             int randomTargetField = legalTargets[rGen.Next(0, legalTargets.Count)];
-            int[] randomMove = { randomSourceField, randomTargetField };
 
+            Move randomMove = new Move(randomSourceField, randomTargetField, PieceID.Black);
+           
             return randomMove;
-
         }
 
         public void RepeatedRandomMove()
@@ -285,7 +281,7 @@ namespace Dvonn_Console
             do
             {
                 WaitForUser();
-                int[] randomMove = CreateRandomMove(PieceID.Black);
+                Move randomMove = CreateRandomMove(PieceID.Black);
                 dvonnBoard.MakeMove(randomMove); 
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(randomMove, PieceID.Black);
@@ -303,8 +299,6 @@ namespace Dvonn_Console
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
         }
-
-
 
     }
 

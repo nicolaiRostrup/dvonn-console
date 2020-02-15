@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
     class Rules
     {
-
         Writer typeWriter = new Writer();
 
         public Board dvonnBoard;
@@ -33,10 +30,9 @@ namespace Dvonn_Console
             return legalSources;
         }
 
-        public bool IsLegalSource(PieceID Color)
+        public bool IsLegalSource(PieceID Color, int fieldID)
         {
-
-
+            return LegalSources(Color).Contains(fieldID);
         }
 
         public List<int> LegalTargets(int fieldID, int pieceCount)
@@ -92,9 +88,7 @@ namespace Dvonn_Console
                 }
 
             }
-
             return true;
-
         }
 
         public int[] Score()
@@ -121,7 +115,6 @@ namespace Dvonn_Console
             if (whiteScore == blackScore) score[2] = 2;
 
             return score;
-
         }
 
         public void CheckDvonnCollapse()
@@ -132,7 +125,6 @@ namespace Dvonn_Console
                 typeWriter.DvonnCollapseText(result);
                 dvonnBoard.VisualizeBoard();
             }
-
         }
 
         public List<Field> FindHeldStacks()
@@ -172,12 +164,10 @@ namespace Dvonn_Console
             while (counter > 0);
 
             return heldFields;
-
         }
 
         public int[] RemoveUnheldStacks(List<Field> heldFields)
         {
-
             int fieldCounter = 0;
             int pieceCounter = 0;
 
@@ -198,7 +188,6 @@ namespace Dvonn_Console
             result[1] = pieceCounter;
 
             return result;
-
         }
 
         public bool GameEndCondition()
@@ -217,21 +206,11 @@ namespace Dvonn_Console
             int legalMoves = 0;
 
             foreach (int fieldID in LegalSources(Color))
-            {
-                legalMoves = legalMoves + LegalTargets(fieldID, dvonnBoard.entireBoard[fieldID].stack.Count).Count; // this line counts all legal targets for current selected position on the board...
-
+            {   
+                legalMoves = legalMoves + LegalTargets(fieldID, dvonnBoard.entireBoard[fieldID].stack.Count).Count; 
             }
             return legalMoves;
         }
-
-
-
-
     }
-
-
-
-
-
 }
 

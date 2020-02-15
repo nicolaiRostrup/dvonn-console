@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
@@ -17,11 +14,11 @@ namespace Dvonn_Console
             Console.WriteLine("Welcome to Dvonn");
             Console.WriteLine("- a mind-bending abstract boardgame");
             Console.WriteLine();
-            Console.WriteLine("C# application developed by Nicolai Rostrup, 2016");
+            Console.WriteLine("C# application developed by Nicolai Rostrup, 2020");
             Console.WriteLine("Original game design by Kris Burm, 2001");
             Console.WriteLine("*****************************************************");
             Console.WriteLine();
-            Console.WriteLine("Version 5.0, computer plays with AI.");
+            Console.WriteLine("Version 5.0, computer optionally plays with AI.");
             Console.WriteLine("Human player is always white. White always begins.");
 
             WaitForUser();
@@ -137,10 +134,10 @@ namespace Dvonn_Console
             Console.ReadKey();
         }
 
-        public void MoveComment(int[] moveCombo, PieceID Color)
+        public void MoveComment(Move thisMove, PieceID Color)
         {
             Console.WriteLine();
-            Console.WriteLine(Color.ToString() + " move, " + fieldCoordinates[moveCombo[0]] + " / " + fieldCoordinates[moveCombo[1]] + " has been executed.");
+            Console.WriteLine(Color.ToString() + " move, " + fieldCoordinates[thisMove.source] + " / " + fieldCoordinates[thisMove.target] + " has been executed.");
 
         }
         

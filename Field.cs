@@ -8,7 +8,6 @@ namespace Dvonn_Console
 {
     class Field
     {
-
         public string fieldName;
         public int index; //index in entireBoard array
         public List<Piece> stack = new List<Piece>();
@@ -22,8 +21,6 @@ namespace Dvonn_Console
         public Field WE;
         public Field NW;
 
-
-
         public Piece TopPiece()
         {
             if (stack.Count > 0) return stack[stack.Count - 1];
@@ -33,9 +30,7 @@ namespace Dvonn_Console
         public void DeleteTopPiece()
         {
             if (stack.Count > 0) stack.RemoveAt(stack.Count - 1);
-
         }
-
 
         public Field NextField(directionID direction)
         {
@@ -88,6 +83,5 @@ namespace Dvonn_Console
             }
             return returnString;
         }
-
     }
 }

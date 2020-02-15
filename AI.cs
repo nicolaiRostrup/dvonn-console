@@ -8,13 +8,15 @@ namespace Dvonn_Console
         Board aiBoard;
         Rules ruleBook;
         PositionTree dvonnTree;
-        int nodeCounter = 0;
 
-        PieceID currentPlayer;
-        PieceID humanPlayerColor;
+        PieceID playerToMove;
         Move lastMove;
         Move contemplatedMove;
         Move proposedMove;
+        public int maxDepth = 6;
+
+        private float minimumQuality = 0.85f; //a value that determines lower threshold for endpoint examination.
+        Random rgen = new Random();
 
         public AI()
         {
@@ -24,99 +26,140 @@ namespace Dvonn_Console
             ruleBook = new Rules(aiBoard);
         }
 
-        public void CreateTree(Position currentPosition, int maxDepth)
+        public Move ComputeAiMove(Position currentPosition, PieceID playerToMove)
         {
+            this.playerToMove = playerToMove;
+            CreateTree(currentPosition, maxDepth);
+            Console.WriteLine(dvonnTree.ToString());
 
-            dvonnTree = new PositionTree(currentPosition);
-
-            //computer allways has black, so branching begins with black...
-            currentPlayer = PieceID.Black;
-
-            for (int i = 0; i < maxDepth; i++)
+            //todo: write and optimize AI flow (!)
+            //PickBestMove();
+            //(...)
+            float highestEvaluation = 0f;
+            foreach (Node child in dvonnTree.root.children)
             {
-                Console.Write("AI: Branching begun at depth " + (i + 1) + "\n");
-                BranchAllEndpoints(currentPlayer, i + 1);
+                if (child.isStub) continue;
+                if (child.position.evaluation > highestEvaluation)
+                {
+                    highestEvaluation = child.position.evaluation;
+                    proposedMove = child.lastMove;
+                }
 
             }
-
-
+            
+            return proposedMove;
         }
 
-        void BranchAllEndpoints(PieceID player, int depth)
+        public void CreateTree(Position currentPosition, int maxDepth)
         {
-            List<Node> formerEndPoints = new List<Node>();
-            nodeCounter = 0;
+            dvonnTree = new PositionTree(currentPosition);
 
-            Console.Write("AI: endpoints found: " + dvonnTree.currentEndPoints.Count + "\n");
-
-            foreach (Node endPoint in dvonnTree.currentEndPoints)
+            for (int i = 1; i <= maxDepth; i++)
             {
-                aiBoard.ReceivePosition(endPoint.position);
-                List<int> legalSources = ruleBook.LegalSources(player);
+                BranchRelevantEndpoints(i);
+            }
 
-                int comboCounter = 0;
+            EvaluateResultingEndPoints();
+        }
 
-                foreach (int sourceIndex in legalSources)
+        void BranchRelevantEndpoints(int depth)
+        {
+            Console.WriteLine();
+            Console.WriteLine("AI: Branching begun at depth " + depth );
+            Console.WriteLine("AI: Color to move: " + playerToMove.ToString());
+            Console.WriteLine("AI: Endpoints found: " + dvonnTree.currentEndPoints.Count );
+
+            int currentEndPointCount = dvonnTree.currentEndPoints.Count;
+            int skipNodeCounter = 0;
+            int createNodeCounter = 0;
+
+            for( int i =0; i < currentEndPointCount; i++ )
+            {
+                Node endPoint = dvonnTree.currentEndPoints[i];
+
+                //todo: evaluate position needs to be implemented porperly, and a value for minimum quality needs to be properly determined.
+                float evaluation = EvaluatePosition(endPoint.position);
+                endPoint.position.evaluation = evaluation;
+
+                if (endPoint.id != 1 && evaluation < minimumQuality)
                 {
-                    comboCounter++;
-                    if (comboCounter > 2) break;
+                    endPoint.isStub= true;
+                    endPoint.isEndPoint = false;
+                    skipNodeCounter++;
+                    continue;
+                }
+                else
+                {
+                    aiBoard.ReceivePosition(endPoint.position);
+                    List<int> legalSources = ruleBook.LegalSources(playerToMove);
 
-                    int sourceStackCount = aiBoard.entireBoard[sourceIndex].stack.Count;
-                    List<int> legalTargets = ruleBook.LegalTargets(sourceIndex, sourceStackCount);
-
-                    if (nodeCounter == 0 || nodeCounter % 1000 == 0) Console.WriteLine("Possible moves count for generation " + depth + " sample = " + legalSources.Count * legalTargets.Count);
-
-                    int localCounter = 0;
-                    foreach (int targetIndex in legalTargets)
+                    foreach (int sourceIndex in legalSources)
                     {
-                        localCounter++;
+                        int sourceStackCount = aiBoard.entireBoard[sourceIndex].stack.Count;
+                        List<int> legalTargets = ruleBook.LegalTargets(sourceIndex, sourceStackCount);
 
-                        if (localCounter > 2) break;
+                        foreach (int targetIndex in legalTargets)
+                        {
+                            Move thisMove = new Move(sourceIndex, targetIndex, playerToMove);
+                            Position newPosition = aiBoard.SendPosition();
+                            newPosition.MakeMove(thisMove);
 
-                        Move thisMove = new Move(sourceIndex, targetIndex, currentPlayer);
-                        Position newPosition = aiBoard.SendPosition();
-                        newPosition.MakeMove(thisMove);
-
-                        dvonnTree.InsertChild(new Node(newPosition, thisMove), endPoint);
-                        nodeCounter++;
+                            dvonnTree.InsertChild(new Node(newPosition, thisMove), endPoint);
+                            createNodeCounter++;
+                        }
 
                     }
 
+                    endPoint.isEndPoint = false;
+
                 }
-                formerEndPoints.Add(endPoint);
 
             }
 
-            foreach (Node endPoint in formerEndPoints) dvonnTree.FinishBranching(endPoint);
+            //Prune irrelevant endpoints
+            List<Node> relevantEndPoints = new List<Node>();
 
-            Console.Write("AI: added " + nodeCounter + " positions to position tree for color " + player + "\n");
-            Console.Write("AI: new number of endpoints in tree = " + dvonnTree.currentEndPoints.Count + "\n");
-            Console.Write("AI: total number of nodes in tree = " + dvonnTree.totalNodes + "\n");
-            nodeCounter = 0;
-            AlternatePlayer();
+            foreach(Node thisNode in dvonnTree.currentEndPoints)
+            {
+                if (thisNode.isEndPoint == true) relevantEndPoints.Add(thisNode);
+
+            }
+            dvonnTree.currentEndPoints = relevantEndPoints;
+
+            Console.WriteLine("AI: Branching for depth level " + depth + " is complete.");
+            Console.WriteLine("AI: skipped total number of nodes: " + skipNodeCounter );
+            Console.WriteLine("AI: added total number of nodes: " + createNodeCounter);
+            Console.WriteLine("AI: new number of relevant end points: " + relevantEndPoints.Count);
+
+            playerToMove = playerToMove.ToOpposite();
 
         }
 
-        public string PrintTree(int maxNodes)
+        void EvaluateResultingEndPoints()
         {
-            return dvonnTree.DisplayTree(maxNodes);
+            foreach (Node thisNode in dvonnTree.currentEndPoints)
+            {
+                thisNode.position.evaluation = EvaluatePosition(thisNode.position);
+
+            }
+
         }
 
-        void AlternatePlayer()
+        public void PickBestMove()
         {
-            if (currentPlayer == PieceID.Black) currentPlayer = PieceID.White;
-            else currentPlayer = PieceID.Black;
+            //Evaluate positions in PositionTree 
+            // and use minimax algorithm to choose best move.
+            //https://en.wikipedia.org/wiki/Minimax
 
         }
 
-        void PruneEndPoints()
-        {
-
-        }
 
         public float EvaluatePosition(Position position)
         {
-            /*Should count as POSITIVE:
+            /*Note: Most of these required methods are already written further below.
+
+            Required Methods:
+            Should count as POSITIVE:
             Short distance to dvonn piece.
             Number of controlled stacks.
             Low number of opponent controlled stacks.
@@ -136,14 +179,11 @@ namespace Dvonn_Console
             Moving a piece towards a dvonn piece.
 
             In the early phase build low. One own color piece on top of one enemy piece.
-            */
+            
 
-            /*Should count as NEGATIVE:
+            Should count as NEGATIVE:
             To build high towers
-
-            */
-
-            /*
+           
             
             Methods needed (all aply to situation after stack has been moved to chosen target, and concerns the properties of the resulting target:
          
@@ -166,7 +206,9 @@ namespace Dvonn_Console
 
             */
 
-            return 0f;
+            //As a test feature, this method currently returns a random float
+            int randomNumber = rgen.Next(0, 100);
+            return randomNumber / 100f;
 
         }
 
@@ -229,7 +271,7 @@ namespace Dvonn_Console
             {
                 dvonnLanders.AddRange(aiBoard.GetLanders(fieldID, lastMove.responsibleColor));
             }
-            //Remove all sources in dvonn landers, which is not legal:
+            //Remove all sources in dvonn landers, which are not legal:
             foreach(int i in dvonnLanders)
             {
                 if (!legalSources.Contains(i)) dvonnLanders.Remove(i);
