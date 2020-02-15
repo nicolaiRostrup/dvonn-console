@@ -1,4 +1,3 @@
-# dvonn-console
 # Dvonn
 
 ## - C# applikation
