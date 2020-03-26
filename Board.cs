@@ -14,34 +14,41 @@ namespace Dvonn_Console
     {
         Writer typeWriter = new Writer();
         public Field[] entireBoard = new Field[49];
-        public List<Tuple<int, int, int>> allPrincipalMoves = new List<Tuple<int, int, int>>();
+        public Dictionary<Tuple<int, int, int>, int> allPrincipalMoves = new Dictionary<Tuple<int, int, int>, int>();
         List<directionID> allDirections = new List<directionID> { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
 
+        //AllPrincipalMoves.Count=786
+        //Item1 = source, Item2 = target, Item 3 = jumps (number of pieces in source stack).
         public void CalculatePrincipalMoves()
         {
-            // find all legal moves in any direction for any field
-            foreach (directionID direction in allDirections)
+            int principalMoveCounter = 1;
+            // For all fields on the board...
+            for (int i = 0; i < 49; i++)
             {
-                for (int i = 0; i < 49; i++) // For samtlige felter undersøges...
+                // find all legal moves in any direction...
+                foreach (directionID direction in allDirections)
                 {
                     Field sourceField = entireBoard[i];
 
-                    for (int jump = 1; jump < 11; jump++) // Antal jumps er max 10, idet 10 er det længst mulige jump i Dvonn (c0/ct).
+                    for (int jump = 1; jump < 11; jump++) // Max jumps is ten, the move: c0/ct.
                     {
                         Field nextField = sourceField.NextField(direction);
-                        if (nextField != null)
-                        {
-                            allPrincipalMoves.Add(Tuple.Create(i, nextField.index, jump));
-                            sourceField = nextField;
-                        }
 
-                        //AllPrincipalMoves.Count=786
-                        //Item1 = source, Item2 = target, Item 3 = jumps (number of pieces in source stack).
+                        if (nextField == null)
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            allPrincipalMoves.Add( Tuple.Create(i, nextField.index, jump), principalMoveCounter);
+                            sourceField = nextField;
+                            principalMoveCounter++;
+                        }
 
                     }
                 }
             }
-
+            
         }
 
         public void InstantiateFields()
@@ -335,26 +342,19 @@ namespace Dvonn_Console
 
         }
 
-        public List<int> GetLanders(int targetID, PieceID color)
+        public List<int> GetLanders(int targetID, PreMove premove)
         {
             List<int> landers = new List<int>();
 
-            //i is here sourceID
-            for (int i = 0; i < 49; i++)
-            {   
-                int pieceCount = entireBoard[i].stack.Count;
-                if (pieceCount == 0) continue;
-                if (i == targetID) continue;
-                if (entireBoard[i].TopPiece().pieceType != color) continue;
-
-                for (int j = 0; j < 786; j++)
+            foreach(Move move in premove.legalMoves)
+            {
+                if(move.target == targetID && !landers.Contains(move.source))
                 {
-                    if (allPrincipalMoves[j].Item1 == i && allPrincipalMoves[j].Item2 == targetID && allPrincipalMoves[j].Item3 == pieceCount) landers.Add(i);
-                
+                    landers.Add(move.source);
                 }
-
             }
-            return landers;
+
+           return landers;
         }
     }
 }

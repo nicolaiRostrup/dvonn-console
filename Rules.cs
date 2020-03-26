@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 
@@ -15,67 +16,125 @@ namespace Dvonn_Console
             this.dvonnBoard = dvonnBoard;
         }
 
-        public List<int> LegalSources(PieceID Color)
+        public List<int> GetLegalTargets(int fieldID)
         {
-            List<int> legalSources = new List<int>();
+            List<int> foundLegalTargets = new List<int>();
+
+            int pieceCount = dvonnBoard.entireBoard[fieldID].stack.Count;
+            if (pieceCount == 0) return foundLegalTargets;
+            else
+            {
+                List<int> principalTargets = FindNotEmptyStacks();
+                principalTargets.Remove(fieldID);
+                foreach(int targetID in principalTargets)
+                {
+                    if (dvonnBoard.allPrincipalMoves.ContainsKey(Tuple.Create(fieldID, targetID, pieceCount)))
+                    {
+                        foundLegalTargets.Add( targetID);
+                    }
+
+                }
+
+            }
+            return foundLegalTargets;
+        }
+
+        public PreMove ManufacturePreMove(PieceID color)
+        {
+            PreMove premove = new PreMove(color);
+            List<int> notEmptyStacks = FindNotEmptyStacks();
+            List<int> legalSources = LegalSources(color, notEmptyStacks);
+            
+            premove.legalMoves = FindLegalMoves(legalSources, color, notEmptyStacks);
+            premove.trueLegalSources = GetTrueLegalSources(premove.legalMoves);
+            premove.trueLegalTargets = GetTrueLegalTargets(premove.legalMoves);
+
+            return premove;
+
+        }
+
+        private List<Move> FindLegalMoves(List<int> sources, PieceID color, List<int> notEmptyStacks)
+        {
+            List<Move> legalMoves = new List<Move>();
+
+            foreach (int sourceID in sources)
+            {
+                int pieceCount = dvonnBoard.entireBoard[sourceID].stack.Count;
+                List<int> principalTargets = notEmptyStacks;
+                principalTargets.Remove(sourceID);
+
+                foreach(int targetID in principalTargets)
+                {
+                    if (dvonnBoard.allPrincipalMoves.ContainsKey(Tuple.Create(sourceID, targetID, pieceCount)))
+                    {
+                        legalMoves.Add(new Move(sourceID, targetID, color));
+                    }
+
+                }
+
+            }
+            return legalMoves;
+        }
+
+        private List<int> FindNotEmptyStacks()
+        {
+            List<int> principalTargets = new List<int>();
 
             for (int i = 0; i < 49; i++)
             {
-                if (dvonnBoard.entireBoard[i].stack.Count > 0 && EnclosureCondition(i) == false && dvonnBoard.entireBoard[i].TopPiece().pieceType == Color)
+                if (dvonnBoard.entireBoard[i].stack.Count > 0 )
                 {
-                    legalSources.Add(i);
+                    principalTargets.Add(i);
                 }
+
+            }
+            return principalTargets;
+        }
+
+        private List<int> LegalSources(PieceID colorToMove, List<int> notEmptyStacks)
+        {
+            List<int> legalSources = new List<int>();
+
+            foreach(int fieldID in notEmptyStacks)
+            {   
+                if (dvonnBoard.entireBoard[fieldID].TopPiece().pieceType != colorToMove) continue;
+                else if (EnclosureCondition(fieldID) == true) continue;
+                else legalSources.Add(fieldID);
 
             }
             return legalSources;
         }
 
-        public bool IsLegalSource(PieceID Color, int fieldID)
+        private List<int> GetTrueLegalSources(List<Move> moveList)
         {
-            return LegalSources(Color).Contains(fieldID);
-        }
+            List<int> trueLegalSources = new List<int>();
 
-        public List<int> LegalTargets(int fieldID, int pieceCount)
-        {
-            List<int> legalTargets = new List<int>();
-            // For all tupples in AllPrincipalMoves...
-            for (int i = 0; i < 786; i++)
+            foreach (Move move in moveList)
             {
-                int targetID = dvonnBoard.allPrincipalMoves[i].Item2;
-
-                if (dvonnBoard.allPrincipalMoves[i].Item1 == fieldID && dvonnBoard.entireBoard[targetID].stack.Count > 0 && dvonnBoard.allPrincipalMoves[i].Item3 == pieceCount)
+                if (!trueLegalSources.Contains(move.source))
                 {
-                    legalTargets.Add(targetID);
-                }
-
-            }
-            return legalTargets;
-        }
-
-        public List<int> LegalTargets(List<int> sourceList)
-        {   
-            List<int> legalTargets = new List<int>();
-
-            foreach (int fieldID in sourceList)
-            {
-                int pieceCount = dvonnBoard.entireBoard[fieldID].stack.Count;
-                
-                // For all tupples in AllPrincipalMoves...
-                for (int i = 0; i < 786; i++)
-                {
-                    int targetID = dvonnBoard.allPrincipalMoves[i].Item2;
-
-                    if (dvonnBoard.allPrincipalMoves[i].Item1 == fieldID && dvonnBoard.entireBoard[targetID].stack.Count > 0 && dvonnBoard.allPrincipalMoves[i].Item3 == pieceCount)
-                    {
-                        if(!legalTargets.Contains(targetID)) legalTargets.Add(targetID);
-                        
-                    }
+                    trueLegalSources.Add(move.source);
                 }
             }
-            return legalTargets;
+            return trueLegalSources;
         }
 
-        public bool EnclosureCondition(int fieldID)
+        private List<int> GetTrueLegalTargets(List<Move> moveList)
+        {
+            List<int> trueLegalTargets = new List<int>();
+
+            foreach (Move move in moveList)
+            {
+                if (!trueLegalTargets.Contains(move.target))
+                {
+                    trueLegalTargets.Add(move.target);
+                }
+            }
+            return trueLegalTargets;
+        }
+
+
+        private bool EnclosureCondition(int fieldID)
         {
             // kant-felter kan ikke være "enclosed"
             if (dvonnBoard.entireBoard[fieldID].isEdge == true) return false;
@@ -190,27 +249,19 @@ namespace Dvonn_Console
             return result;
         }
 
-        public bool GameEndCondition()
+        public bool GameEndCondition(PreMove premoveWhite, PreMove premoveBlack)
         {
-            if (LegalMoves(PieceID.White) == 0 && LegalMoves(PieceID.Black) == 0) return true;
-            else return false;
-        }
-        public bool PassCondition(PieceID Color)
-        {
-            if (LegalMoves(Color) == 0) return true;
+            if (premoveWhite.trueLegalSources.Count == 0 && premoveBlack.trueLegalSources.Count == 0) return true;
             else return false;
         }
 
-        public int LegalMoves(PieceID Color)
+        public bool PassCondition(PreMove premove)
         {
-            int legalMoves = 0;
-
-            foreach (int fieldID in LegalSources(Color))
-            {   
-                legalMoves = legalMoves + LegalTargets(fieldID, dvonnBoard.entireBoard[fieldID].stack.Count).Count; 
-            }
-            return legalMoves;
+            if (premove.trueLegalSources.Count == 0) return true;
+            else return false;
         }
+
+
     }
 }
 

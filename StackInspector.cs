@@ -25,7 +25,9 @@ namespace Dvonn_Console
 
             List<Piece> chosenPieceList = thisBoard.entireBoard[fieldID].stack;
 
-            List<int> legalTargets = ruleBook.LegalTargets(fieldID, chosenPieceList.Count);
+            PreMove simulatedPreMove = ruleBook.ManufacturePreMove(PieceID.Neutral);
+
+            List<int> legalTargets = ruleBook.GetLegalTargets(fieldID);
 
 
             if (chosenPieceList.Count == 0)
@@ -59,8 +61,6 @@ namespace Dvonn_Console
                 if (chosenPieceList.Count(p => p.pieceType == PieceID.Dvonn) > 0) Console.WriteLine("The stack also contains " + chosenPieceList.Count(p => p.pieceType == PieceID.Dvonn) + " Dvonn pieces.");
                 else Console.WriteLine("The stack contains no Dvonn pieces.");
 
-                legalTargets = ruleBook.LegalTargets(fieldID, chosenPieceList.Count);
-
                 if (legalTargets.Count == 0) Console.WriteLine(fieldName + " has currently no legal targets:");
                 else
                 {
@@ -75,7 +75,6 @@ namespace Dvonn_Console
             Console.WriteLine();
 
         }
-
 
 
     }

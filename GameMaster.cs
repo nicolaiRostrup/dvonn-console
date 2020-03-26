@@ -28,15 +28,15 @@ namespace Dvonn_Console
             dvonnBoard.CalculatePrincipalMoves();
             ruleBook = new Rules(dvonnBoard);
             stackInspector = new StackInspector(dvonnBoard);
-            
-            if(dvonnGame.isAiDriven) aiAgent = new AI();
-            if(dvonnGame.isRandomPopulated)
+
+            if (dvonnGame.isAiDriven) aiAgent = new AI();
+            if (dvonnGame.isRandomPopulated)
             {
                 Position randomPosition = dvonnGame.RandomPopulateWithCorrection();
                 //Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
                 dvonnBoard.ReceivePosition(randomPosition);
             }
-            
+
             dvonnBoard.VisualizeBoard();
 
             RunGameMenu();
@@ -45,6 +45,8 @@ namespace Dvonn_Console
         public void RunGameMenu()
         {
             bool gamerunning = true;
+            PreMove premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
+            PreMove premoveComputer;
 
             while (gamerunning)
             {
@@ -55,8 +57,8 @@ namespace Dvonn_Console
                 switch (input)
                 {
                     case "1": // Enter move ...
-
-                        Move chosenMove = GetUserMoveInput();
+                        
+                        Move chosenMove = GetUserMoveInput(premovePlayer);
 
                         if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
                         {
@@ -64,7 +66,7 @@ namespace Dvonn_Console
                             break;
                         }
                         else
-                        {   
+                        {
                             // else, if user doesn't want to go back to menu, execute move...
                             dvonnBoard.MakeMove(chosenMove);
                             dvonnBoard.VisualizeBoard();
@@ -74,8 +76,12 @@ namespace Dvonn_Console
                         //Do a check for dvonn collapse, and if true, execute and make comment.
                         ruleBook.CheckDvonnCollapse();
 
+                        //After White's move both players' options need to be analyzed.
+                        premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
+                        premoveComputer = ruleBook.ManufacturePreMove(PieceID.Black);
+
                         //Check whether game has ended. 
-                        if (ruleBook.GameEndCondition() == true)
+                        if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
                             typeWriter.GameEndText(ruleBook.Score());
                             gamerunning = false;
@@ -83,7 +89,7 @@ namespace Dvonn_Console
                         }
 
                         //Check if black has any legal moves
-                        if (ruleBook.PassCondition(PieceID.Black) == true)
+                        if (ruleBook.PassCondition(premoveComputer) == true)
                         {
                             Console.WriteLine();
                             Console.WriteLine("Computer has no legal moves. It's your turn again.");
@@ -103,7 +109,7 @@ namespace Dvonn_Console
                         }
                         else
                         {
-                            Move randomMove = CreateRandomMove(PieceID.Black);
+                            Move randomMove = PickRandomMove(premoveComputer);
                             dvonnBoard.MakeMove(randomMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(randomMove, PieceID.Black);
@@ -111,8 +117,12 @@ namespace Dvonn_Console
                         //Do a check for dvonn collapse, and if true, execute and make comment.
                         ruleBook.CheckDvonnCollapse();
 
+                        //After Black's move both players' options need to be analyzed.
+                        premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
+                        premoveComputer = ruleBook.ManufacturePreMove(PieceID.Black);
+
                         //Again, this time after blacks move, check whether game has ended.
-                        if (ruleBook.GameEndCondition() == true)
+                        if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
                             WaitForUser();
                             typeWriter.GameEndText(ruleBook.Score());
@@ -121,13 +131,22 @@ namespace Dvonn_Console
                         }
 
                         //Check if white has any legal moves
-                        if (ruleBook.PassCondition(PieceID.White) == true)
+                        if (ruleBook.PassCondition(premovePlayer) == true)
                         {
-                            RepeatedRandomMove();
-                            if (ruleBook.LegalMoves(PieceID.White) != 0) break; // If white should have gotten a new opportunity to move, return to main menu...
-                            typeWriter.GameEndText(ruleBook.Score()); // Otherwise, the game is over...
-                            gamerunning = false; // when returned, close console
-                            break;
+                            PreMove newMoveOption = RepeatedRandomMove(premoveComputer);
+                            if (newMoveOption == null)
+                            {
+                                typeWriter.GameEndText(ruleBook.Score()); //the game is over...
+                                gamerunning = false; // when returned, close console
+                                break;
+                            }
+                            else
+                            {
+                                // If white should have gotten a new opportunity to move, return to main menu...
+                                premovePlayer = newMoveOption;
+                                break;
+                            }
+
                         }
                         break;
 
@@ -185,7 +204,7 @@ namespace Dvonn_Console
 
         }
 
-        public Move GetUserMoveInput()
+        public Move GetUserMoveInput(PreMove premovePlayer)
         {
             Move chosenMove = new Move(0, 0, PieceID.White);
             string move;
@@ -233,17 +252,17 @@ namespace Dvonn_Console
                     Console.WriteLine("Target field is not entered correctly.");
                     continue;
                 }
-                   
+
                 int source = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
                 int target = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
 
-                if (!ruleBook.LegalSources(PieceID.White).Contains(source))
+                if (!premovePlayer.trueLegalSources.Contains(source))
                 {
                     Console.WriteLine("The source field is not valid.");
                     Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
                     continue;
                 }
-                if (!ruleBook.LegalTargets(source, dvonnBoard.entireBoard[source].stack.Count).Contains(target))
+                if (!premovePlayer.trueLegalTargets.Contains(target))
                 {
                     Console.WriteLine("The target field is not valid.");
                     Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
@@ -257,40 +276,36 @@ namespace Dvonn_Console
             return chosenMove;
 
         }
-        public Move CreateRandomMove(PieceID player)
+        public Move PickRandomMove(PreMove premove)
         {
             Random rGen = new Random();
-
-            List<int> legalSources = ruleBook.LegalSources(player);
-
-            //Removes all the legal sources that do not have at least one legal target.
-            List<int> trueLegalSources = legalSources.FindAll(src => ruleBook.LegalTargets(src, dvonnBoard.entireBoard[src].stack.Count).Count != 0);
-
-            int randomSourceField = trueLegalSources[rGen.Next(0, trueLegalSources.Count)];
-            List<int> legalTargets = ruleBook.LegalTargets(randomSourceField, dvonnBoard.entireBoard[randomSourceField].stack.Count);
-            int randomTargetField = legalTargets[rGen.Next(0, legalTargets.Count)];
-
-            Move randomMove = new Move(randomSourceField, randomTargetField, PieceID.Black);
-           
+            Move randomMove = premove.legalMoves[rGen.Next(0, premove.legalMoves.Count)];
             return randomMove;
         }
 
-        public void RepeatedRandomMove()
+        public PreMove RepeatedRandomMove(PreMove AIpreMove)
         {
+            PreMove currentPlayerPreMove;
+            PreMove currentAiPreMove = AIpreMove;
+
             Console.WriteLine("Human player has no legal moves, computer will continue playing");
             do
             {
                 WaitForUser();
-                Move randomMove = CreateRandomMove(PieceID.Black);
-                dvonnBoard.MakeMove(randomMove); 
+                Move randomMove = PickRandomMove(currentAiPreMove);
+                dvonnBoard.MakeMove(randomMove);
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(randomMove, PieceID.Black);
 
+                currentAiPreMove = ruleBook.ManufacturePreMove(PieceID.Black);
+                currentPlayerPreMove = ruleBook.ManufacturePreMove(PieceID.White);
+
                 //TODO: write how the game should end, game end text, etc...
-                if (ruleBook.GameEndCondition() == true) return;
+                if (ruleBook.GameEndCondition(currentPlayerPreMove, currentAiPreMove) == true) return null;
 
-            } while (ruleBook.LegalMoves(PieceID.White) == 0);
+            } while (currentPlayerPreMove.legalMoves.Count == 0);
 
+            return currentPlayerPreMove;
         }
 
         public void WaitForUser()

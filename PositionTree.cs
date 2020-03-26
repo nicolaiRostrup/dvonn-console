@@ -62,7 +62,7 @@ namespace Dvonn_Console
             for (int i = 1; i <= depthReach; i++)
             {
                 long generationNodeCounter = 0L;
-                double totalEvaluation = 0.0;
+                float totalEvaluation = 0f;
                 long totalStackCount = 0L;
                 
                 foreach(Node parent in parentNodes)
@@ -78,7 +78,7 @@ namespace Dvonn_Console
                     }
 
                 }
-                float meanEvaluation = (float)(totalEvaluation / generationNodeCounter);
+                float meanEvaluation = totalEvaluation / generationNodeCounter;
                 float meanStackCount = totalStackCount / generationNodeCounter;
 
                 sb.AppendLine("At depth " + i + " is placed " + generationNodeCounter + " number of nodes with a mean evaluation of: " + meanEvaluation + ", and a mean stack count of " + meanStackCount);
