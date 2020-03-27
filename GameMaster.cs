@@ -83,7 +83,7 @@ namespace Dvonn_Console
                         //Check whether game has ended. 
                         if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
-                            typeWriter.GameEndText(ruleBook.Score());
+                            typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
                             gamerunning = false;
                             break; // when returned, close console
                         }
@@ -125,7 +125,7 @@ namespace Dvonn_Console
                         if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
                             WaitForUser();
-                            typeWriter.GameEndText(ruleBook.Score());
+                            typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
                             gamerunning = false; // when returned, close console
                             break;
                         }
@@ -136,7 +136,7 @@ namespace Dvonn_Console
                             PreMove newMoveOption = RepeatedRandomMove(premoveComputer);
                             if (newMoveOption == null)
                             {
-                                typeWriter.GameEndText(ruleBook.Score()); //the game is over...
+                                typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black)); //the game is over...
                                 gamerunning = false; // when returned, close console
                                 break;
                             }
@@ -172,7 +172,7 @@ namespace Dvonn_Console
 
                     case "3":
                         Console.WriteLine("If game was to end now, the score would be: ");
-                        Console.WriteLine("White: {0} \t Black: {1}", ruleBook.Score()[0], ruleBook.Score()[1]);
+                        Console.WriteLine("White: {0} \t Black: {1}", ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
                         Console.WriteLine();
                         break;
 
@@ -215,9 +215,9 @@ namespace Dvonn_Console
             {
                 chosenMove.source = 0; chosenMove.target = 0;
 
-                Console.WriteLine("Please enter your move like this: a1/a2, where");
-                Console.WriteLine("a1 is the source field, and a2 is the target field.");
-                Console.WriteLine("Enter 'menu' to return to main menu");
+                Console.WriteLine("Please enter your move like this: 'a1/a2', where");
+                Console.WriteLine("'a1' is the source field, and 'a2' is the target field.");
+                Console.WriteLine("[Enter 'menu' to return to main menu]");
                 move = Console.ReadLine().ToUpper();
 
                 if (move == "MENU")

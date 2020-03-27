@@ -84,11 +84,11 @@ namespace Dvonn_Console
         }
 
 
-        public void GameEndText(int[] gameScore)
+        public void GameEndText(int whiteScore, int blackScore)
         {
             //int[] gameScore = Calculate.Score();
 
-            if (gameScore[2] == 0)
+            if (whiteScore > blackScore)
             {
                 Console.WriteLine();
                 Console.WriteLine();
@@ -96,11 +96,11 @@ namespace Dvonn_Console
                 Console.WriteLine("The game is over");
                 Console.WriteLine("Human player has won");
                 Console.WriteLine("The end score was: ");
-                Console.WriteLine("White: {0} \t Black: {1}", gameScore[0], gameScore[1]);
+                Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
             }
-            if (gameScore[2] == 1)
+            if (blackScore > whiteScore)
             {
                 Console.WriteLine();
                 Console.WriteLine();
@@ -108,11 +108,11 @@ namespace Dvonn_Console
                 Console.WriteLine("The game is over");
                 Console.WriteLine("Computer has won, playing random moves");
                 Console.WriteLine("The end score was: ");
-                Console.WriteLine("White: {0} \t Black: {1}", gameScore[0], gameScore[1]);
+                Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
             }
-            if (gameScore[2] == 2)
+            if (whiteScore == blackScore)
             {
                 Console.WriteLine();
                 Console.WriteLine();
@@ -120,7 +120,7 @@ namespace Dvonn_Console
                 Console.WriteLine("The game is over");
                 Console.WriteLine("The game was a tie.");
                 Console.WriteLine("The end score was: ");
-                Console.WriteLine("White: {0} \t Black: {1}", gameScore[0], gameScore[1]);
+                Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
             }

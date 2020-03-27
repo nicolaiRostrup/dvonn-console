@@ -9,8 +9,10 @@ namespace Dvonn_Console
     {
         public Node root;
         public List<Node> currentEndPoints = new List<Node>();
+        public List<GenerationAccount> generationAccounts = new List<GenerationAccount>();
         public long totalNodes = 0;
-        
+        public int depthReach = 0;
+
 
         public PositionTree(Position rootPosition)
         {
@@ -32,22 +34,21 @@ namespace Dvonn_Console
             childNode.id = totalNodes;
         }
 
-        int GetDepthReach()
-        {
-            int depthCounter = 0;
-            foreach (Node node in currentEndPoints)
-            {
-                if (node.depth > depthCounter) depthCounter = node.depth;
+        public class GenerationAccount {
 
-            }
-            return depthCounter;
+            public int generationNumber;
+            public float minimumEvaluation;
+            public float maximumEvaluation;
+            public long totalNodeCount;
+            public long stubs;
+            public long evalutatedNodes;
         }
 
 
         //For developer purposes...
-        public override string ToString() {
+        public override string ToString()
+        {
 
-            int depthReach = GetDepthReach();
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine("This is a report of the contents of current AI position tree");
@@ -62,14 +63,19 @@ namespace Dvonn_Console
             for (int i = 1; i <= depthReach; i++)
             {
                 long generationNodeCounter = 0L;
+                long stubNodeCounter = 0L;
                 float totalEvaluation = 0f;
                 long totalStackCount = 0L;
-                
-                foreach(Node parent in parentNodes)
+
+                foreach (Node parent in parentNodes)
                 {
-                    foreach(Node child in parent.children)
+                    foreach (Node child in parent.children)
                     {
-                        if (child.isStub) continue;
+                        if (child.isStub)
+                        {
+                            stubNodeCounter++;
+                            continue;
+                        }
                         generationNodeCounter++;
                         totalEvaluation += child.position.evaluation;
                         totalStackCount += child.position.NumberOfStacks();
@@ -78,11 +84,18 @@ namespace Dvonn_Console
                     }
 
                 }
-                float meanEvaluation = totalEvaluation / generationNodeCounter;
-                float meanStackCount = totalStackCount / generationNodeCounter;
+                if (generationNodeCounter > 0)
+                {
+                    float meanEvaluation = totalEvaluation / generationNodeCounter;
+                    float meanStackCount = totalStackCount / generationNodeCounter;
 
-                sb.AppendLine("At depth " + i + " is placed " + generationNodeCounter + " number of nodes with a mean evaluation of: " + meanEvaluation + ", and a mean stack count of " + meanStackCount);
+                    sb.AppendLine("At depth " + i + " is placed " + generationNodeCounter + " number of (non stub) nodes with a mean evaluation of: " + meanEvaluation + ", and a mean stack count of " + meanStackCount);
 
+                }
+                else
+                {
+                    sb.AppendLine("At depth " + i + " is placed " + childNodes.Count + " nodes, of which " + stubNodeCounter + " are stub nodes. ");
+                }
                 parentNodes.Clear();
                 foreach (Node child in childNodes)
                 {

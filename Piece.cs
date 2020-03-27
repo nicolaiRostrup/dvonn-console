@@ -6,6 +6,17 @@ using System.Threading.Tasks;
 
 namespace Dvonn_Console
 {
+    
+    public class Piece
+    {
+        public PieceID pieceType;
+
+        public Piece(PieceID pieceType)
+        {
+            this.pieceType = pieceType;
+        }
+    }
+
     public enum PieceID
     {
         Dvonn, White, Black, Neutral
@@ -35,14 +46,6 @@ namespace Dvonn_Console
 
     }
 
-    public class Piece
-    {
-        public PieceID pieceType;
-
-        public Piece(PieceID pieceType)
-        {
-            this.pieceType = pieceType;
-        }
-    }
+    
 
 }

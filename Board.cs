@@ -40,7 +40,7 @@ namespace Dvonn_Console
                         }
                         else
                         {
-                            allPrincipalMoves.Add( Tuple.Create(i, nextField.index, jump), principalMoveCounter);
+                            allPrincipalMoves.Add(Tuple.Create(i, nextField.index, jump), principalMoveCounter);
                             sourceField = nextField;
                             principalMoveCounter++;
                         }
@@ -48,7 +48,7 @@ namespace Dvonn_Console
                     }
                 }
             }
-            
+
         }
 
         public void InstantiateFields()
@@ -287,40 +287,47 @@ namespace Dvonn_Console
 
         }
 
-        public int GetDistanceToDvonn(Move lastMove)
+        private int ShortestDistanceToDvonn(int fieldID)
         {
-            Field targetField = entireBoard[lastMove.target];
+            if (entireBoard[fieldID].stack.Any(piece => piece.pieceType == PieceID.Dvonn)) return 0;
 
-            if (targetField.stack.FindAll(piece => piece.pieceType == PieceID.Dvonn).Count > 0) return 0;
+            //max distance
+            int shortestDistance = 10;
 
-            else
+            foreach (directionID direction in allDirections)
             {
-                List<int> shortPathsToDvonn = new List<int>();
-
-                foreach (directionID direction in allDirections)
+                Field runningField = entireBoard[fieldID];
+                int jumpCounter = 0;
+                while (true)
                 {
-                    int counter = 0;
-                    Field runningField = targetField;
-                    while (true)
+                    runningField = runningField.GetNeighbour(direction);
+                    jumpCounter++;
+
+                    if (runningField == null) break;
+                    if (runningField.stack.Count == 0) continue;
+                    if(runningField.stack.Any(piece => piece.pieceType == PieceID.Dvonn))
                     {
-                        counter++;
-                        runningField = runningField.GetNeighbour(direction);
-
-                        if (runningField == null) break;
-                        if (runningField.stack.Count == 0) continue;
-
-                        if (runningField.stack.FindAll(piece => piece.pieceType == PieceID.Dvonn).Count > 0)
-                        {
-                            shortPathsToDvonn.Add(counter);
-                            break;
-                        }
+                        if (jumpCounter < shortestDistance) shortestDistance = jumpCounter;
                     }
+                    
                 }
-                shortPathsToDvonn.Sort();
-                return shortPathsToDvonn[0];
+            }
+            
+            return shortestDistance;
 
+        }
+
+        public float GetMeanDistanceToDvonn(List<int> theseStacks)
+        {
+            
+            int totalDistance = 0;
+
+            foreach (int field in theseStacks)
+            {
+                totalDistance += ShortestDistanceToDvonn(field);
             }
 
+            return (float)totalDistance / theseStacks.Count;
 
         }
 
@@ -334,7 +341,11 @@ namespace Dvonn_Console
 
                 foreach (Piece piece in entireBoard[i].stack)
                 {
-                    if (piece.pieceType == PieceID.Dvonn) dvonnStacks.Add(i);
+                    if (piece.pieceType == PieceID.Dvonn)
+                    {
+                        dvonnStacks.Add(i);
+                        break;
+                    }
                 }
 
             }
@@ -346,15 +357,15 @@ namespace Dvonn_Console
         {
             List<int> landers = new List<int>();
 
-            foreach(Move move in premove.legalMoves)
+            foreach (Move move in premove.legalMoves)
             {
-                if(move.target == targetID && !landers.Contains(move.source))
+                if (move.target == targetID && !landers.Contains(move.source))
                 {
                     landers.Add(move.source);
                 }
             }
 
-           return landers;
+            return landers;
         }
     }
 }

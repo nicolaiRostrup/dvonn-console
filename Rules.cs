@@ -60,11 +60,10 @@ namespace Dvonn_Console
             foreach (int sourceID in sources)
             {
                 int pieceCount = dvonnBoard.entireBoard[sourceID].stack.Count;
-                List<int> principalTargets = notEmptyStacks;
-                principalTargets.Remove(sourceID);
 
-                foreach(int targetID in principalTargets)
+                foreach(int targetID in notEmptyStacks)
                 {
+                    if (targetID == sourceID) continue;
                     if (dvonnBoard.allPrincipalMoves.ContainsKey(Tuple.Create(sourceID, targetID, pieceCount)))
                     {
                         legalMoves.Add(new Move(sourceID, targetID, color));
@@ -150,30 +149,24 @@ namespace Dvonn_Console
             return true;
         }
 
-        public int[] Score()
+        public int GetScore (PieceID color)
         {
-            int whiteScore = 0;
-            int blackScore = 0;
-            int[] score = { 0, 0, 0 };
-
+            int scoreCounter = 0;
             for (int i = 0; i < 49; i++)
             {
                 Field chosenField = dvonnBoard.entireBoard[i];
 
                 if (chosenField.stack.Count == 0) continue;
-                if (chosenField.TopPiece().pieceType == PieceID.White) whiteScore += chosenField.stack.Count;
-                if (chosenField.TopPiece().pieceType == PieceID.Black) blackScore += chosenField.stack.Count;
+                if (chosenField.TopPiece().pieceType == color) scoreCounter += chosenField.stack.Count;
+                
             }
 
-            score[0] = whiteScore;
-            score[1] = blackScore;
-
             // the third integer in the array is a code for the game result
-            if (whiteScore > blackScore) score[2] = 0;
-            if (whiteScore < blackScore) score[2] = 1;
-            if (whiteScore == blackScore) score[2] = 2;
+            //if (whiteScore > blackScore) score[2] = 0;
+            //if (whiteScore < blackScore) score[2] = 1;
+            //if (whiteScore == blackScore) score[2] = 2;
 
-            return score;
+            return scoreCounter;
         }
 
         public void CheckDvonnCollapse()

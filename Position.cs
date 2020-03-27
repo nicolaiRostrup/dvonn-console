@@ -6,11 +6,13 @@ namespace Dvonn_Console
     //This class is thought of as a notation format for exchanging dvonn board positions
     //It is more lightweight than the board class and can be added to evaluation trees...
 
-    public class Position
+    class Position
     {
         public int[] edgeFields = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 18, 19, 29, 30, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48 };
         public string[] stacks = new string[49];
         public float evaluation = 0.0f;
+        public PreMove premove = null;
+
 
         public Position()
         {
@@ -46,6 +48,14 @@ namespace Dvonn_Console
         {
             stacks[move.target] += stacks[move.source];
             stacks[move.source] = "";
+        }
+
+        public void Copy(Position positionToCopy)
+        {
+            for(int i=0; i < 49; i++)
+            {
+                stacks[i] = positionToCopy.stacks[i];
+            }
         }
 
     }

@@ -25,8 +25,6 @@ namespace Dvonn_Console
 
             List<Piece> chosenPieceList = thisBoard.entireBoard[fieldID].stack;
 
-            PreMove simulatedPreMove = ruleBook.ManufacturePreMove(PieceID.Neutral);
-
             List<int> legalTargets = ruleBook.GetLegalTargets(fieldID);
 
 

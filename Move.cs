@@ -1,6 +1,6 @@
 ﻿namespace Dvonn_Console
 {
-    public class Move
+    class Move
     {
         public int source;
         public int target;
