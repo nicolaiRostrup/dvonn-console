@@ -51,6 +51,7 @@
     <Compile Include="Node.cs" />
     <Compile Include="Piece.cs" />
     <Compile Include="Position.cs" />
+    <Compile Include="PositionComparator.cs" />
     <Compile Include="PositionTree.cs" />
     <Compile Include="PreMove.cs" />
     <Compile Include="Rules.cs" />

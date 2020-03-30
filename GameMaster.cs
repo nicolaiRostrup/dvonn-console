@@ -57,7 +57,7 @@ namespace Dvonn_Console
                 switch (input)
                 {
                     case "1": // Enter move ...
-                        
+
                         Move chosenMove = GetUserMoveInput(premovePlayer);
 
                         if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
@@ -102,7 +102,7 @@ namespace Dvonn_Console
                         if (dvonnGame.isAiDriven)
                         {
                             Move aiMove = aiAgent.ComputeAiMove(dvonnBoard.SendPosition(), PieceID.Black);
-                            WaitForUser();
+                            WaitForUser();//for debug...
                             dvonnBoard.MakeMove(aiMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(aiMove, PieceID.Black);
@@ -253,24 +253,37 @@ namespace Dvonn_Console
                     continue;
                 }
 
-                int source = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
-                int target = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
+                chosenMove.source = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[0]).index;
+                chosenMove.target = dvonnBoard.entireBoard.First(field => field.fieldName == sourceAndTarget[1]).index;
 
-                if (!premovePlayer.trueLegalSources.Contains(source))
+                if (!premovePlayer.legalMoves.Contains(chosenMove))
                 {
-                    Console.WriteLine("The source field is not valid.");
-                    Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
-                    continue;
-                }
-                if (!premovePlayer.trueLegalTargets.Contains(target))
-                {
-                    Console.WriteLine("The target field is not valid.");
-                    Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
-                    continue;
+                    bool sourceInvalid = !premovePlayer.trueLegalSources.Contains(chosenMove.source);
+                    bool targetInvalid = !premovePlayer.trueLegalTargets.Contains(chosenMove.target);
+
+                    if (sourceInvalid && targetInvalid)
+                    {
+                        Console.WriteLine("Both source and target field are invalid.");
+                        Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
+                        continue;
+                    }
+                    else if (sourceInvalid)
+                    {
+                        Console.WriteLine("The source field is not valid.");
+                        Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
+                        continue;
+                    }
+                    else if (targetInvalid)
+                    {
+                        Console.WriteLine("The target field is not valid.");
+                        Console.WriteLine("If in doubt, please consult Dvonn rules (enter 'rules')");
+                        continue;
+                    }
+
                 }
 
                 userInputCorrect = true;
-                chosenMove = new Move(source, target, PieceID.White);
+                
             }
 
             return chosenMove;

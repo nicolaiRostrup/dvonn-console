@@ -7,8 +7,7 @@ namespace Dvonn_Console
 {
     class Rules
     {
-        Writer typeWriter = new Writer();
-
+        private Writer typeWriter = new Writer();
         public Board dvonnBoard;
 
         public Rules(Board dvonnBoard)
@@ -155,17 +154,10 @@ namespace Dvonn_Console
             for (int i = 0; i < 49; i++)
             {
                 Field chosenField = dvonnBoard.entireBoard[i];
-
                 if (chosenField.stack.Count == 0) continue;
                 if (chosenField.TopPiece().pieceType == color) scoreCounter += chosenField.stack.Count;
                 
             }
-
-            // the third integer in the array is a code for the game result
-            //if (whiteScore > blackScore) score[2] = 0;
-            //if (whiteScore < blackScore) score[2] = 1;
-            //if (whiteScore == blackScore) score[2] = 2;
-
             return scoreCounter;
         }
 

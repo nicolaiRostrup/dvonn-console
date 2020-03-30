@@ -305,21 +305,20 @@ namespace Dvonn_Console
 
                     if (runningField == null) break;
                     if (runningField.stack.Count == 0) continue;
-                    if(runningField.stack.Any(piece => piece.pieceType == PieceID.Dvonn))
+                    if (runningField.stack.Any(piece => piece.pieceType == PieceID.Dvonn))
                     {
                         if (jumpCounter < shortestDistance) shortestDistance = jumpCounter;
                     }
-                    
+
                 }
             }
-            
+
             return shortestDistance;
 
         }
 
         public float GetMeanDistanceToDvonn(List<int> theseStacks)
         {
-            
             int totalDistance = 0;
 
             foreach (int field in theseStacks)
@@ -366,6 +365,95 @@ namespace Dvonn_Console
             }
 
             return landers;
+        }
+
+        public List<int> ControlledStacks(PieceID color)
+        {
+            List<int> controlledStacks = new List<int>();
+            for (int i = 0; i < 49; i++)
+            {
+                if (entireBoard[i].stack.Count == 0) continue;
+                if (entireBoard[i].TopPiece().pieceType == color) controlledStacks.Add(i);
+            }
+            return controlledStacks;
+
+        }
+
+        public float GetMeanHeight(List<int> theseStacks)
+        {
+            int totalHeight = 0;
+            foreach (int stack in theseStacks)
+            {
+                totalHeight += entireBoard[stack].stack.Count;
+            }
+            return (float)totalHeight / theseStacks.Count;
+
+        }
+
+        public int GetMaxHeight(List<int> theseStacks)
+        {
+            int maxHeight = 0;
+            foreach (int fieldID in theseStacks)
+            {
+                int height = entireBoard[fieldID].stack.Count;
+                if (height > maxHeight) maxHeight = height;
+
+            }
+            return maxHeight;
+
+        }
+
+        public int GetZebraCount(PieceID color)
+        {
+            int zebraCounter = 0;
+
+            for (int i = 0; i < 49; i++)
+            {
+                List<Piece> stack = entireBoard[i].stack;
+                if (stack.Count < 2) continue;
+
+                if (stack[0].pieceType == color.ToOpposite() && stack[1].pieceType == color)
+                {
+                    zebraCounter++;
+                }
+
+            }
+            return zebraCounter;
+
+        }
+
+        public int DvonnLanders(PreMove premove)
+        {
+            List<int> dvonnStacks = GetDvonnStacks();
+
+            List<int> dvonnLanders = new List<int>();
+
+            foreach (int fieldID in dvonnStacks)
+            {
+                List<int> landers = GetLanders(fieldID, premove);
+                foreach (int landerID in landers)
+                {
+                    if (!dvonnLanders.Contains(landerID))
+                    {
+                        dvonnLanders.Add(landerID);
+                    }
+                }
+            }
+            return dvonnLanders.Count;
+        }
+
+        public bool isDvonnLander(int fieldID, PreMove premove)
+        {
+            List<int> dvonnStacks = GetDvonnStacks();
+
+            foreach (int dvonnField in dvonnStacks)
+            {
+                List<int> dvonnLanders = GetLanders(dvonnField, premove);
+                if (dvonnLanders.Contains(fieldID)) return true;
+
+            }
+            return false;
+
         }
     }
 }

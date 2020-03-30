@@ -4,25 +4,30 @@ namespace Dvonn_Console
 {
     class Node
     {
-        public Position position;
-        public List<Node> children = new List<Node>();
-        public Node parent = null;
-        public Move lastMove; //the move that resulted in this position
-        public bool isEndPoint = true;
-        public bool isStub = false;
-        public int depth;
-        public long id;
+        public Move move = null;
+        public float evaluation = 0f;
 
-        public Node(Position position, Move lastMove)
+        public Position resultingPosition;
+        public PositionComparator.PositionReport positionReport = null;
+        public PreMove premove = null;
+
+        public Node parent = null;
+        public List<Node> children = new List<Node>();
+        
+        public bool isSkippable = false;
+        
+
+        public Node(Move move, Position resultingPosition)
         {
-            this.position = position;
-            this.lastMove = lastMove;
+            this.move = move;
+            this.resultingPosition = resultingPosition;
 
         }
 
-        public Node(Position position)
+        //For root node
+        public Node(Position resultingPosition)
         {
-            this.position = position;
+            this.resultingPosition = resultingPosition;
 
         }
     }

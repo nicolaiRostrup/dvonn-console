@@ -16,98 +16,63 @@ namespace Dvonn_Console
 
         public PositionTree(Position rootPosition)
         {
-            root = new Node(rootPosition);
-            root.depth = 0;
+            root = new Node(rootPosition); //root has no move, because what came before the root position(resulting position of root node) is irrelevant to AI.
             currentEndPoints.Add(root);
             totalNodes++;
-            root.id = totalNodes;
         }
-
 
         public void InsertChild(Node childNode, Node parent)
         {
             parent.children.Add(childNode);
             childNode.parent = parent;
-            childNode.depth = parent.depth + 1;
             currentEndPoints.Add(childNode);
             totalNodes++;
-            childNode.id = totalNodes;
         }
 
-        public class GenerationAccount {
-
+        public class GenerationAccount
+        {
             public int generationNumber;
-            public float minimumEvaluation;
-            public float maximumEvaluation;
-            public long totalNodeCount;
-            public long stubs;
-            public long evalutatedNodes;
+            public List<Node> parentNodes = new List<Node>();
+            public long childCount = 0;
+
+            public GenerationAccount(int generationNumber)
+            {
+                this.generationNumber = generationNumber;
+            }
+       
         }
 
 
         //For developer purposes...
         public override string ToString()
         {
-
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine("This is a report of the contents of current AI position tree");
             sb.AppendLine("The tree contains a total of " + totalNodes + " nodes.");
             sb.AppendLine("The tree has " + currentEndPoints.Count + " number of active endpoints.");
             sb.AppendLine("The tree has a depth reach of " + depthReach);
-            sb.AppendLine("At depth 0, root position has an evaluation of: " + root.position.evaluation + " and contains " + root.position.NumberOfStacks() + " stacks");
 
-            List<Node> parentNodes = new List<Node>();
-            List<Node> childNodes = new List<Node>();
-            parentNodes.Add(root);
-            for (int i = 1; i <= depthReach; i++)
+            foreach (GenerationAccount account in generationAccounts)
             {
-                long generationNodeCounter = 0L;
-                long stubNodeCounter = 0L;
-                float totalEvaluation = 0f;
-                long totalStackCount = 0L;
-
-                foreach (Node parent in parentNodes)
-                {
-                    foreach (Node child in parent.children)
-                    {
-                        if (child.isStub)
-                        {
-                            stubNodeCounter++;
-                            continue;
-                        }
-                        generationNodeCounter++;
-                        totalEvaluation += child.position.evaluation;
-                        totalStackCount += child.position.NumberOfStacks();
-
-                        childNodes.Add(child);
-                    }
-
-                }
-                if (generationNodeCounter > 0)
-                {
-                    float meanEvaluation = totalEvaluation / generationNodeCounter;
-                    float meanStackCount = totalStackCount / generationNodeCounter;
-
-                    sb.AppendLine("At depth " + i + " is placed " + generationNodeCounter + " number of (non stub) nodes with a mean evaluation of: " + meanEvaluation + ", and a mean stack count of " + meanStackCount);
-
-                }
-                else
-                {
-                    sb.AppendLine("At depth " + i + " is placed " + childNodes.Count + " nodes, of which " + stubNodeCounter + " are stub nodes. ");
-                }
-                parentNodes.Clear();
-                foreach (Node child in childNodes)
-                {
-                    parentNodes.Add(child);
-                }
-                childNodes.Clear();
+                sb.AppendLine("At depth " + account.generationNumber + " is placed " + account.parentNodes.Count + " nodes, which have a total of " + account.childCount + " children nodes.");
             }
+            double totalEvaluation = 0.0;
+            long totalStackCount = 0L;
+            foreach (Node endPoint in currentEndPoints)
+            {
+                totalEvaluation += endPoint.evaluation;
+                totalStackCount += endPoint.resultingPosition.NumberOfStacks();
+            }
+            float meanEvaluation = (float)totalEvaluation / currentEndPoints.Count;
+            float meanStackCount = (float)totalStackCount / currentEndPoints.Count;
+
+            sb.AppendLine("The tree has  " + currentEndPoints.Count + " leaves.");
+            sb.AppendLine("The leaves have a mean evaluation of: " + meanEvaluation);
+            sb.AppendLine("The leaves have a mean stack count of: " + meanStackCount);
 
             return sb.ToString();
 
         }
-
     }
-
 }
