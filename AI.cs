@@ -214,11 +214,12 @@ namespace Dvonn_Console
         private void AssignValuesToLeaves()
         {
             int[] evalutations = { 5, 6, 7, 4, 5, 3, 6, 6, 9, 7, 5, 9, 8, 6  };
+            string[] names = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N" };
             List<Node> leaves = dvonnTree.GetAllLeaves();
             for (int i = 0; i < 14; i++)
             {
                 leaves[i].testValue = evalutations[i];
-
+                leaves[i].name = names[i];
             }
 
 

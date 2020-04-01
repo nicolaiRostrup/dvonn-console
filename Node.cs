@@ -16,6 +16,7 @@ namespace Dvonn_Console
         public int beta = int.MaxValue;
 
         //for debug purposes:
+        public string name = "";
         public int testValue = 0;
 
         public Node(Move move, Position resultingPosition)
