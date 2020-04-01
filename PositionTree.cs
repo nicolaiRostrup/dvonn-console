@@ -14,6 +14,9 @@ namespace Dvonn_Console
         private List<Node> allLeaves = new List<Node>();
         private int depthCounter = 0;
 
+        //for debug:
+        private int leaveCounter = 0;
+
 
         public PositionTree(Position rootPosition)
         {
@@ -36,9 +39,8 @@ namespace Dvonn_Console
 
         }
 
-        private void GetGenerationAccounts(Node node)
+        private void ManufactureGenerationAccounts(Node node)
         {
-           
             GenerationAccount thisGeneration = generationAccounts.FirstOrDefault(account => account.depth == node.depth);
 
             if (thisGeneration == null)
@@ -63,13 +65,13 @@ namespace Dvonn_Console
             {
                 foreach (Node child in node.children)
                 {
-                    GetGenerationAccounts(child);
+                    ManufactureGenerationAccounts(child);
                 }
             }
 
         }
 
-        public int GetDepthReach()
+        private int GetDepthReach()
         {
             depthCounter = 0;
             GetDepth(root);
@@ -93,9 +95,9 @@ namespace Dvonn_Console
 
         }
 
-        private long GetTotalNodeCount()
+        private int GetTotalNodeCount()
         {
-            long totalNodeCounter = 1L; //= root
+            int totalNodeCounter = 1; //= root
             foreach(GenerationAccount account in generationAccounts)
             {
                 totalNodeCounter += account.childCount;
@@ -105,7 +107,7 @@ namespace Dvonn_Console
         }
 
         //Retrieves children in outermost generation (max depth).
-        private long OuterLeavesCount()
+        private int OuterLeavesCount()
         {
             return generationAccounts[generationAccounts.Count - 1].depthNodesCount;
         }
@@ -133,6 +135,29 @@ namespace Dvonn_Console
             
         }
 
+        public int GetAllLeavesCount()
+        {
+            leaveCounter = 0;
+            GetLeavesCount(root);
+            return leaveCounter;
+        }
+
+        private void GetLeavesCount(Node node)
+        {
+            if (node.children.Count == 0)
+            {
+                leaveCounter++;
+            }
+            else
+            {
+                foreach (Node child in node.children)
+                {
+                    GetLeavesCount(child);
+                }
+            }
+
+        }
+
         public List<Node> GetParents(List<Node> theseNodes)
         {
             List<Node> parents = new List<Node>();
@@ -146,8 +171,8 @@ namespace Dvonn_Console
         private class GenerationAccount
         {
             public int depth;
-            public long depthNodesCount = 0L;
-            public long childCount = 0L; //should equal depthNodesCount in next generation.
+            public int depthNodesCount = 0;
+            public int childCount = 0; //should equal depthNodesCount in next generation.
 
             public GenerationAccount(int depth)
             {
@@ -161,7 +186,7 @@ namespace Dvonn_Console
         public override string ToString()
         {
             generationAccounts.Clear();
-            GetGenerationAccounts(root);
+            ManufactureGenerationAccounts(root);
             List<Node> allLeaves = GetAllLeaves();
 
             StringBuilder sb = new StringBuilder();
@@ -193,8 +218,8 @@ namespace Dvonn_Console
                 }
             }
 
-            //long totalEvaluation = 0L;
-            //long totalStackCount = 0L;
+            //int totalEvaluation = 0L;
+            //int totalStackCount = 0L;
             //foreach (Node endPoint in currentEndPoints)
             //{
             //    totalEvaluation += endPoint.evaluation;

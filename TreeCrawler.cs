@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
@@ -11,10 +7,11 @@ namespace Dvonn_Console
     {
         private Node currentNode = null;
         public PositionTree tree;
-        private int pruneCounter = 0;
 
-        private int backCounter = 0;
-        private int proceedCounter = 0;
+        //for debug purposes:
+        private int pruneCounter = 0;
+        private int leavesBefore = 0;
+        private int leavesAfter = 0;
 
 
         public TreeCrawler(PositionTree tree)
@@ -22,47 +19,35 @@ namespace Dvonn_Console
             this.tree = tree;
         }
 
-        public void GoToRoot()
+        public void AlphaBetaPruning()
+        {
+            leavesBefore = tree.GetAllLeavesCount();
+            GoToRoot();
+
+            //Starts off a chain of methods, which when finished will have performed alpha beta pruning of tree.
+            GoToFirstEndpointParent();
+
+        }
+
+        private void GoToRoot()
         {
             currentNode = tree.root;
 
         }
 
-        public void GoToFirstEndpointParent()
+        private void GoToFirstEndpointParent()
         {
-            //Console.WriteLine("In method: GoToFirstEndpointParent");
-            //PrintNode();
-
             while (HasGrandChildren(currentNode))
             {
-                Proceed();
+                Proceed(0);
             }
 
             HandleGroupOfEndPoints();
 
         }
 
-        public void Proceed()
+        private void Proceed(int index)
         {
-            //Console.WriteLine("In method: Proceed");
-            //PrintNode();
-
-            int currentAlpha = currentNode.alpha;
-            int currentBeta = currentNode.beta;
-
-            currentNode = currentNode.children[0];
-            currentNode.alpha = currentAlpha;
-            currentNode.beta = currentBeta;
-
-            proceedCounter++;
-
-        }
-
-        public void Proceed(int index)
-        {
-            //Console.WriteLine("In method: Proced(index)");
-            //PrintNode();
-
             int currentAlpha = currentNode.alpha;
             int currentBeta = currentNode.beta;
 
@@ -70,25 +55,20 @@ namespace Dvonn_Console
             currentNode.alpha = currentAlpha;
             currentNode.beta = currentBeta;
 
-            proceedCounter++;
-
-            GoToFirstEndpointParent();
-
         }
 
-        public void GoTowardsRoot()
+        //Eventually the tree crawler will in fact reach the root in this method, and the process will end.
+        private void GoTowardsRoot()
         {
-            //Console.WriteLine("In method: GoToWardsRoot");
-            //PrintNode();
-
             while (ExistSibling() == false)
             {
                 if (currentNode.parent == null)
                 {
+                    leavesAfter = tree.GetAllLeavesCount();
                     Console.WriteLine("TreeCrawler: Alpha Beta Pruning Complete");
                     Console.WriteLine("Pruned " + pruneCounter + " branches. ");
-                    Console.WriteLine("Proceeded " + proceedCounter + " times. ");
-                    Console.WriteLine("Backed " + backCounter + " times. ");
+                    Console.WriteLine("Leaves before: " + leavesBefore);
+                    Console.WriteLine("Leaves after: " + leavesAfter);
                     return;
                 }
 
@@ -100,21 +80,19 @@ namespace Dvonn_Console
 
         }
 
-        public void Back()
+        private void Back()
         {
-            Console.WriteLine("In method: Back");
-            //PrintNode();
-            Console.WriteLine("Current node name: " + currentNode.name);
-            Console.WriteLine("Node alpha: " + currentNode.alpha);
-            Console.WriteLine("Node beta: " + currentNode.beta);
-
             int measuredAlpha = currentNode.alpha;
             int measuredBeta = currentNode.beta;
             int index = GetNodeIndex(currentNode);
 
             currentNode = currentNode.parent;
+            ProcessAlphaBetaValues(measuredAlpha, measuredBeta, index, true);
 
+        }
 
+        private void ProcessAlphaBetaValues(int measuredAlpha, int measuredBeta, int index, bool doPruning)
+        {
             if (IsMaximumGeneration(currentNode))
             {
                 if (measuredBeta > currentNode.alpha) currentNode.alpha = measuredBeta;
@@ -124,36 +102,23 @@ namespace Dvonn_Console
                 if (measuredAlpha < currentNode.beta) currentNode.beta = measuredAlpha;
 
             }
-
-            if (currentNode.alpha >= currentNode.beta)
+            if (doPruning)
             {
-                PruneRemainingSiblings(index);
+                if (currentNode.alpha >= currentNode.beta)
+                {
+                    PruneRemainingSiblings(index);
+                }
             }
-
-            backCounter++;
-
-        }
-
-        //Starts off a chain of methods, which when finished will have performed alpha beta pruning of tree.
-        public void AlphaBetaPruning()
-        {
-            GoToRoot();
-
-            GoToFirstEndpointParent();
 
         }
 
         private void HandleGroupOfEndPoints()
         {
-            Console.WriteLine("In method: HandleGroupOfEndPoints");
-            //PrintNode();
-            Console.WriteLine("Parent of endpoints name: " + currentNode.name);
-            Console.WriteLine("Parent alpha: " + currentNode.alpha);
-            Console.WriteLine("Parent beta: " + currentNode.beta);
+            int childCounter = 0;
 
-            if (currentNode.parent.children.Count == 1)
+            while (ExistMoreEndnodes(childCounter))
             {
-                int value = CopyEndPointValue(0);
+                int value = CopyEndPointValue(childCounter);
 
                 if (IsMaximumGeneration(currentNode))
                 {
@@ -165,36 +130,13 @@ namespace Dvonn_Console
 
                 }
 
-            }
-            else
-            {
-                int childCounter = 0;
-
-                while (ExistMoreEndnodes(childCounter))
+                if (currentNode.alpha >= currentNode.beta && IsSingleChild(currentNode) == false)
                 {
-                    int value = CopyEndPointValue(childCounter);
-
-                    if (IsMaximumGeneration(currentNode))
-                    {
-                        Console.WriteLine("maximum");
-                        if (value > currentNode.alpha) currentNode.alpha = value;
-                    }
-                    else
-                    {
-                        Console.WriteLine("minimum");
-                        if (value < currentNode.beta) currentNode.beta = value;
-
-                    }
-
-                    if (currentNode.alpha >= currentNode.beta)
-                    {
-                        PruneRemainingSiblings(childCounter);
-                    }
-
-
-                    childCounter++;
-
+                    PruneRemainingSiblings(childCounter);
                 }
+
+                childCounter++;
+
             }
 
             GoTowardsRoot();
@@ -202,50 +144,27 @@ namespace Dvonn_Console
 
         private int CopyEndPointValue(int i)
         {
-            Console.WriteLine("Visiting endnode: " + currentNode.children[i].name + ". Value: " + currentNode.children[i].testValue);
             return currentNode.children[i].testValue;
 
         }
 
-
-        public void GoToNextSibling()
+        private void GoToNextSibling()
         {
-
-            //Console.WriteLine("In method: GoToNextSibling");
-            //PrintNode();
-
             int currentAlpha = currentNode.alpha;
             int currentBeta = currentNode.beta;
             int childIndex = GetNodeIndex(currentNode);
             currentNode = currentNode.parent;
-
-            if (IsMaximumGeneration(currentNode))
-            {
-                if (currentBeta > currentNode.alpha) currentNode.alpha = currentBeta;
-            }
-            else
-            {
-                if (currentAlpha < currentNode.beta) currentNode.beta = currentAlpha;
-
-            }
-            backCounter++;
+            ProcessAlphaBetaValues(currentAlpha, currentBeta, childIndex, false);
 
             if (currentNode.alpha >= currentNode.beta)
             {
                 PruneRemainingSiblings(childIndex);
                 GoTowardsRoot();
             }
+
             else
             {
-
-                int childCurrentAlpha = currentNode.alpha;
-                int childCurrentBeta = currentNode.beta;
-                currentNode = currentNode.children[childIndex + 1];
-
-                currentNode.alpha = childCurrentAlpha;
-                currentNode.beta = childCurrentBeta;
-
-                proceedCounter++;
+                Proceed(childIndex + 1);
 
                 if (HasGrandChildren(currentNode) == false)
                 {
@@ -261,12 +180,11 @@ namespace Dvonn_Console
         }
 
 
-        public void PruneRemainingSiblings(int goodSibling)
+        private void PruneRemainingSiblings(int goodSibling)
         {
             if (goodSibling == currentNode.children.Count - 1)
             {
-                PrintNode();
-                Console.WriteLine("Checked for pruning, but nothing to Prune");
+                Console.WriteLine("AI: Checked for pruning, but nothing to Prune");
 
             }
             else
@@ -277,8 +195,7 @@ namespace Dvonn_Console
 
                 currentNode.children.RemoveRange(firstChild, range);
                 pruneCounter += range;
-                PrintNode();
-                Console.WriteLine("Pruned no. of children: " + range);
+                Console.WriteLine("AI: Pruned no. of children: " + range);
             }
         }
 
@@ -292,19 +209,19 @@ namespace Dvonn_Console
             return node.parent.children.IndexOf(node);
         }
 
-        public bool HasGrandChildren(Node node)
+        private bool HasGrandChildren(Node node)
         {
             if (node.children.Count == 0) return false;
             else if (node.children[0].children.Count > 0) return true;
             else return false;
         }
 
-        public bool ExistParent()
+        private bool ExistParent()
         {
             return currentNode.parent != null;
         }
 
-        public bool ExistSibling()
+        private bool ExistSibling()
         {
             if (ExistParent())
             {
@@ -315,29 +232,21 @@ namespace Dvonn_Console
             return false;
         }
 
-        //public bool ExistMoreChildren(int index)
-        //{
-        //    int lastIndex = currentNode.parent.children.Count - 1;
-        //    return index < lastIndex;
-        //}
-
-        public bool ExistMoreEndnodes(int index)
+        private bool ExistMoreEndnodes(int index)
         {
             int lastIndex = currentNode.children.Count - 1;
             return index <= lastIndex;
         }
 
-        public bool IsEndNode(Node node)
+        private bool IsEndNode(Node node)
         {
             return node.children.Count == 0;
         }
 
-
-        public void PrintNode()
+        private bool IsSingleChild(Node node)
         {
-            Console.WriteLine(currentNode.ToString());
+            return node.parent.children.Count == 1;
         }
-
 
     }
 }
