@@ -102,7 +102,6 @@ namespace Dvonn_Console
                         if (dvonnGame.isAiDriven)
                         {
                             Move aiMove = aiAgent.ComputeAiMove(dvonnBoard.SendPosition(), PieceID.Black);
-                            WaitForUser();//for debug...
                             dvonnBoard.MakeMove(aiMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(aiMove, PieceID.Black);
