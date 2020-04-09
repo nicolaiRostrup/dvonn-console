@@ -12,7 +12,7 @@ namespace Dvonn_Console
 
     class Board
     {
-        Writer typeWriter = new Writer();
+        private Writer typeWriter = new Writer();
         public Field[] entireBoard = new Field[49];
         public Dictionary<Tuple<int, int, int>, int> allPrincipalMoves = new Dictionary<Tuple<int, int, int>, int>();
         List<directionID> allDirections = new List<directionID> { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
@@ -330,6 +330,58 @@ namespace Dvonn_Console
 
         }
 
+
+        private List<int> DeadTowers(Rules ruleBook)
+        {
+            List<int> deadTowers = new List<int>();
+
+            for (int i = 0; i < 49; i++)
+            {
+                if (entireBoard[i].stack.Count < 3) continue;
+
+                if (ruleBook.GetLegalTargets(i).Count == 0) deadTowers.Add(i);
+
+            }
+            return deadTowers;
+
+        }
+
+        public DeadTowerAnalysis ManufactureDeadTowerAnalysis(Rules ruleBook, PieceID humanColor)
+        {
+            DeadTowerAnalysis analysis = new DeadTowerAnalysis();
+            List<int> deadTowers = DeadTowers(ruleBook);
+            List<int> dvonnStacks = GetDvonnStacks();
+
+            foreach (int tower in deadTowers)
+            {
+                List<int> towerLanders = GetAllLanders(tower, ruleBook);
+                List<int> thisColorLanders = towerLanders.FindAll(lander => entireBoard[lander].TopPiece().pieceType == humanColor);
+                int thisColorCount = thisColorLanders.Count;
+                int opposedNumber = towerLanders.Count - thisColorCount;
+
+                if (thisColorCount > opposedNumber)
+                {
+                    analysis.humanColorTowerGain += entireBoard[tower].stack.Count;
+                    if (dvonnStacks.Contains(tower)) analysis.humanColorDvonnTowerControl++;
+                }
+                else if (opposedNumber > thisColorCount)
+                {
+                    analysis.aiColorTowerGain += entireBoard[tower].stack.Count;
+                    if (dvonnStacks.Contains(tower)) analysis.aiColorDvonnTowerControl++;
+                }
+            }
+            
+            return analysis;
+        }
+
+        public class DeadTowerAnalysis
+        {
+            public int humanColorTowerGain = 0;
+            public int aiColorTowerGain = 0;
+            public int humanColorDvonnTowerControl = 0;
+            public int aiColorDvonnTowerControl = 0;
+        }
+
         public List<int> GetDvonnStacks()
         {
             List<int> dvonnStacks = new List<int>();
@@ -362,6 +414,26 @@ namespace Dvonn_Console
                 {
                     landers.Add(move.source);
                 }
+            }
+
+            return landers;
+        }
+
+        public List<int> GetAllLanders(int targetID, Rules ruleBook)
+        {
+            List<int> landers = new List<int>();
+
+            for (int i = 0; i < 49; i++)
+            {
+                int pieceCount = entireBoard[i].stack.Count;
+                if (pieceCount == 0) continue;
+                if (ruleBook.EnclosureCondition(i) == true) continue;
+
+                if (allPrincipalMoves.ContainsKey(Tuple.Create(i, targetID, pieceCount)))
+                {
+                    landers.Add(targetID);
+                }
+
             }
 
             return landers;

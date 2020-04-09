@@ -10,6 +10,7 @@ namespace Dvonn_Console
     {
         public Node root = null;
 
+        //these class variables are used for recursive algorithms:
         private List<GenerationAccount> generationAccounts = new List<GenerationAccount>();
         private List<Node> allLeaves = new List<Node>();
         private int depthCounter = 0;

@@ -4,6 +4,7 @@
     {
         public int source;
         public int target;
+        public bool isPassMove = false;
         public PieceID responsibleColor;
         public int evaluation;
 
@@ -12,6 +13,12 @@
             this.source = source;
             this.target = target;
             this.responsibleColor = responsibleColor; //that is, the 'hand' that has executed the move, or is thought to execute the move
+        }
+
+        public Move(PieceID responsibleColor)
+        {
+            isPassMove = true;
+            this.responsibleColor = responsibleColor; 
         }
 
         public override string ToString()

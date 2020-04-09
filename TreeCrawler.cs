@@ -144,7 +144,7 @@ namespace Dvonn_Console
 
         private int CopyEndPointValue(int i)
         {
-            return currentNode.children[i].testValue;
+            return currentNode.children[i].move.evaluation;
 
         }
 

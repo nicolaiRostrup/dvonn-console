@@ -8,7 +8,7 @@ namespace Dvonn_Console
     class Rules
     {
         private Writer typeWriter = new Writer();
-        public Board dvonnBoard;
+        private Board dvonnBoard;
 
         public Rules(Board dvonnBoard)
         {
@@ -132,7 +132,7 @@ namespace Dvonn_Console
         }
 
 
-        private bool EnclosureCondition(int fieldID)
+        public bool EnclosureCondition(int fieldID)
         {
             // kant-felter kan ikke være "enclosed"
             if (dvonnBoard.entireBoard[fieldID].isEdge == true) return false;
@@ -169,6 +169,11 @@ namespace Dvonn_Console
                 typeWriter.DvonnCollapseText(result);
                 dvonnBoard.VisualizeBoard();
             }
+        }
+
+        public void DoDvonnCollapseRoutine()
+        {
+            RemoveUnheldStacks(FindHeldStacks());
         }
 
         public List<Field> FindHeldStacks()
