@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -72,7 +73,7 @@ namespace Dvonn_Console
 
         }
 
-        private int GetDepthReach()
+        public int GetDepthReach()
         {
             depthCounter = 0;
             GetDepth(root);
@@ -159,6 +160,14 @@ namespace Dvonn_Console
 
         }
 
+        public List<Node> GetOuterLeaves()
+        {
+            int outerDepth = GetDepthReach();
+            List<Node> allLeaves = GetAllLeaves();
+            return allLeaves.FindAll(leave => leave.depth == outerDepth);
+
+        }
+
         public List<Node> GetParents(List<Node> theseNodes)
         {
             List<Node> parents = new List<Node>();
@@ -236,5 +245,7 @@ namespace Dvonn_Console
             return sb.ToString();
 
         }
+
+        
     }
 }

@@ -21,6 +21,9 @@ namespace Dvonn_Console
 
         public void AlphaBetaPruning()
         {
+            Console.WriteLine();
+            Console.WriteLine("TreeCrawler: Alpha Beta Pruning begun");
+
             leavesBefore = tree.GetAllLeavesCount();
             GoToRoot();
 
@@ -184,7 +187,7 @@ namespace Dvonn_Console
         {
             if (goodSibling == currentNode.children.Count - 1)
             {
-                Console.WriteLine("AI: Checked for pruning, but nothing to Prune");
+                //Console.WriteLine("AI: Checked for pruning, but nothing to Prune");
 
             }
             else
@@ -195,7 +198,7 @@ namespace Dvonn_Console
 
                 currentNode.children.RemoveRange(firstChild, range);
                 pruneCounter += range;
-                Console.WriteLine("AI: Pruned no. of children: " + range);
+                //Console.WriteLine("AI: Pruned no. of children: " + range);
             }
         }
 

@@ -189,8 +189,37 @@ namespace Dvonn_Console
 
                     case "7": // "Secret" option that lets developer create endgame scenario for test purposes
                         dvonnBoard.ClearBoard();
-                        Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
+                        //Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
+                        Position partialDvonnGame = new Position();
+                        partialDvonnGame.stacks[1] = "BW";
+                        partialDvonnGame.stacks[2] = "WB";
+                        partialDvonnGame.stacks[3] = "WW";
+                        partialDvonnGame.stacks[4] = "WW";
+                        partialDvonnGame.stacks[5] = "BDBWB";
+                        partialDvonnGame.stacks[6] = "BWW";
+                        partialDvonnGame.stacks[7] = "BBB";
+                        partialDvonnGame.stacks[11] = "WWBB";
+                        partialDvonnGame.stacks[12] = "WBW";
+                        partialDvonnGame.stacks[13] = "W";
+                        partialDvonnGame.stacks[14] = "WW";
+                        partialDvonnGame.stacks[15] = "BB";
+                        partialDvonnGame.stacks[16] = "WW";
+                        partialDvonnGame.stacks[21] = "W";
+                        partialDvonnGame.stacks[22] = "WDBBB";
+                        partialDvonnGame.stacks[23] = "W";
+                        partialDvonnGame.stacks[24] = "W";
+                        partialDvonnGame.stacks[24] = "B";
+                        partialDvonnGame.stacks[24] = "B";
+                        partialDvonnGame.stacks[38] = "DW";
+                        partialDvonnGame.stacks[39] = "WW";
+                        partialDvonnGame.stacks[46] = "W";
+                        partialDvonnGame.stacks[47] = "WBWW";
+                        partialDvonnGame.stacks[48] = "W";
+
+
                         dvonnBoard.ReceivePosition(partialDvonnGame);
+                        premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
+                        dvonnBoard.VisualizeBoard();
                         ruleBook.CheckDvonnCollapse();
                         break;
 
