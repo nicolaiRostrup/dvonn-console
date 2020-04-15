@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.Collections.Generic;
+using System.Text;
 
 namespace Dvonn_Console
 {
@@ -7,18 +8,28 @@ namespace Dvonn_Console
     {
         //Currently human player is allways white
         //TODO: write option to choose piece color, and enter name...
-        //public Player whitePlayer;
-        //public Player blackPlayer;
+        public string whitePlayerName = "";
+        public string blackPlayerName = "";
 
         public readonly bool isAiDriven = false;
         public readonly bool isRandomPopulated = true;
         public readonly PieceID humanPlayerColor;
+
+        public DateTime? timeBegun = null;
+        public DateTime? timeEnded = null;
+        public Position openingPosition = new Position();
+        public List<Move> gameMoveList = new List<Move>();
+        public int gameResultWhite = 0;
+        public int gameResultBlack = 0;
+
 
         public Game(bool isAiDriven, bool isRandomPopulated, PieceID humanPlayerColor)
         {
             this.isAiDriven = isAiDriven;
             this.isRandomPopulated = isRandomPopulated;
             this.humanPlayerColor = humanPlayerColor;
+            if (humanPlayerColor == PieceID.White) { whitePlayerName = "human"; blackPlayerName = "AI"; }
+            else { blackPlayerName = "human"; whitePlayerName = "AI"; }
         }
 
         public Position RandomPopulate(int dvonnCount, int whiteCount, int blackCount)
@@ -62,9 +73,9 @@ namespace Dvonn_Console
                 else pieceCount++; //the field was occupied, run the loop once again.
             }
 
-            foreach(int edgeFieldId in position.edgeFields)
+            foreach (int edgeFieldId in position.edgeFields)
             {
-                if(position.stacks[edgeFieldId].Length == 0)
+                if (position.stacks[edgeFieldId].Length == 0)
                 {
                     position.stacks[edgeFieldId] += GetChar(PieceID.Black);
                 }
@@ -91,7 +102,7 @@ namespace Dvonn_Console
             return position;
 
         }
-        
+
         char? GetChar(PieceID pieceColor)
         {
             if (pieceColor == PieceID.Black) return 'B';
@@ -99,6 +110,86 @@ namespace Dvonn_Console
             if (pieceColor == PieceID.Dvonn) return 'D';
 
             else return null;
+        }
+
+
+        private string PrintOpeningPosition()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            for (int i = 0; i < 49; i++)
+            {
+                if (i == 0 || i == 40) sb.Append("  |");
+                if (i == 9 || i == 30) sb.Append(" |");
+                if (i == 19) sb.Append("|");
+                sb.Append(openingPosition.stacks[i]);
+                if (i == 8 || i == 18 || i == 29 || i == 39 || i == 48) sb.AppendLine("|");
+                else sb.Append(".");
+            }
+            return sb.ToString();
+
+        }
+
+        private string GameEndText()
+        {
+            string result = "[ " + gameResultWhite + ", " + gameResultBlack + " ]";
+            if (gameResultWhite == gameResultBlack) return "Game over: Tie: " + result;
+            else if (gameResultWhite > gameResultBlack) return "Game over: White won: " + result;
+            else return "Game over: Black won: " + result;
+        }
+
+        public override string ToString()
+        {
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine("*****************************************************");
+            sb.AppendLine("Dvonn game summary:");
+            sb.AppendLine();
+            sb.AppendLine("Game begun: " + timeBegun.ToString());
+            sb.AppendLine("Game ended: " + timeEnded.ToString());
+            sb.AppendLine("White: " + whitePlayerName);
+            sb.AppendLine("Black: " + blackPlayerName);
+            sb.AppendLine();
+            sb.AppendLine("Opening position: ");
+            sb.AppendLine(PrintOpeningPosition());
+
+            int gameLength = gameMoveList.Count;
+            int moveNumber = 1;
+
+            for (int i = 0; i < gameLength; i++)
+            {
+                Move thisMove = gameMoveList[i];
+                string thisColor = thisMove.responsibleColor.ToChar().ToString();
+                if (thisMove.responsibleColor == PieceID.White && moveNumber < 10) sb.Append(" ");
+                if (thisMove.responsibleColor == PieceID.White) sb.Append(moveNumber + "." + thisColor);
+                else sb.Append(thisColor);
+                if (thisMove.isPassMove) sb.Append(": pass");
+                else if (thisMove.source < 10) sb.Append(":  " + thisMove.source + " -> " + thisMove.target);
+                else sb.Append(": " + thisMove.source + " -> " + thisMove.target);
+                if (thisMove.target < 10) sb.Append(" ");
+                if (thisMove.isCollapseMove) sb.Append(" *" + thisMove.collapsedTowers );
+                if (timeEnded != null && i == gameLength - 1)
+                {
+                    sb.AppendLine(" #");
+                    sb.Append(GameEndText());
+                    break;
+                }
+                if (thisMove.responsibleColor == PieceID.White && thisMove.isCollapseMove) sb.Append("   ");
+                else if (thisMove.responsibleColor == PieceID.White) sb.Append("      ");
+                else
+                {
+                    moveNumber++;
+                    sb.AppendLine();
+                }
+
+            }
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.AppendLine("*****************************************************");
+
+            return sb.ToString();
         }
     }
 }

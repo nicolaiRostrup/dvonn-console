@@ -25,11 +25,11 @@ namespace Dvonn_Console
             {
                 List<int> principalTargets = FindNotEmptyStacks();
                 principalTargets.Remove(fieldID);
-                foreach(int targetID in principalTargets)
+                foreach (int targetID in principalTargets)
                 {
                     if (dvonnBoard.allPrincipalMoves.ContainsKey(Tuple.Create(fieldID, targetID, pieceCount)))
                     {
-                        foundLegalTargets.Add( targetID);
+                        foundLegalTargets.Add(targetID);
                     }
 
                 }
@@ -43,7 +43,7 @@ namespace Dvonn_Console
             PreMove premove = new PreMove(color);
             List<int> notEmptyStacks = FindNotEmptyStacks();
             List<int> legalSources = LegalSources(color, notEmptyStacks);
-            
+
             premove.legalMoves = FindLegalMoves(legalSources, color, notEmptyStacks);
             premove.trueLegalSources = GetTrueLegalSources(premove.legalMoves);
             premove.trueLegalTargets = GetTrueLegalTargets(premove.legalMoves);
@@ -60,7 +60,7 @@ namespace Dvonn_Console
             {
                 int pieceCount = dvonnBoard.entireBoard[sourceID].stack.Count;
 
-                foreach(int targetID in notEmptyStacks)
+                foreach (int targetID in notEmptyStacks)
                 {
                     if (targetID == sourceID) continue;
                     if (dvonnBoard.allPrincipalMoves.ContainsKey(Tuple.Create(sourceID, targetID, pieceCount)))
@@ -80,7 +80,7 @@ namespace Dvonn_Console
 
             for (int i = 0; i < 49; i++)
             {
-                if (dvonnBoard.entireBoard[i].stack.Count > 0 )
+                if (dvonnBoard.entireBoard[i].stack.Count > 0)
                 {
                     principalTargets.Add(i);
                 }
@@ -93,8 +93,8 @@ namespace Dvonn_Console
         {
             List<int> legalSources = new List<int>();
 
-            foreach(int fieldID in notEmptyStacks)
-            {   
+            foreach (int fieldID in notEmptyStacks)
+            {
                 if (dvonnBoard.entireBoard[fieldID].TopPiece().pieceType != colorToMove) continue;
                 else if (EnclosureCondition(fieldID) == true) continue;
                 else legalSources.Add(fieldID);
@@ -148,7 +148,7 @@ namespace Dvonn_Console
             return true;
         }
 
-        public int GetScore (PieceID color)
+        public int GetScore(PieceID color)
         {
             int scoreCounter = 0;
             for (int i = 0; i < 49; i++)
@@ -156,25 +156,42 @@ namespace Dvonn_Console
                 Field chosenField = dvonnBoard.entireBoard[i];
                 if (chosenField.stack.Count == 0) continue;
                 if (chosenField.TopPiece().pieceType == color) scoreCounter += chosenField.stack.Count;
-                
+
             }
             return scoreCounter;
         }
 
-        public void CheckDvonnCollapse()
+        public void CheckDvonnCollapse(Move effectiveMove, bool writeText)
         {
-            int[] result = RemoveUnheldStacks(FindHeldStacks());
-            if (result[0] > 0 && result[1] > 0)
+            if (writeText == false)
             {
-                typeWriter.DvonnCollapseText(result);
-                dvonnBoard.VisualizeBoard();
+                int[] result = RemoveUnheldStacks(FindHeldStacks());
+                if (result[0] > 0 && result[1] > 0)
+
+                    if (effectiveMove != null)
+                    {
+                        effectiveMove.isCollapseMove = true;
+                        effectiveMove.collapsedTowers = result[0];
+                    }
             }
+            else
+            {
+                int[] result = RemoveUnheldStacks(FindHeldStacks());
+                if (result[0] > 0 && result[1] > 0)
+                {
+                    typeWriter.DvonnCollapseText(result);
+                    if (effectiveMove != null)
+                    {
+                        effectiveMove.isCollapseMove = true;
+                        effectiveMove.collapsedTowers = result[0];
+                    }
+                    dvonnBoard.VisualizeBoard();
+                }
+
+            }
+
         }
 
-        public void DoDvonnCollapseRoutine()
-        {
-            RemoveUnheldStacks(FindHeldStacks());
-        }
 
         public List<Field> FindHeldStacks()
         {

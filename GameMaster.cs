@@ -33,12 +33,12 @@ namespace Dvonn_Console
             if (dvonnGame.isRandomPopulated)
             {
                 Position randomPosition = dvonnGame.RandomPopulateWithCorrection();
-                //Position randomPosition = dvonnGame.RandomPopulate(3, 23, 23);
+                dvonnGame.openingPosition = randomPosition;
                 dvonnBoard.ReceivePosition(randomPosition);
             }
 
             dvonnBoard.VisualizeBoard();
-
+            dvonnGame.timeBegun = DateTime.Now;
             RunGameMenu();
         }
 
@@ -69,12 +69,13 @@ namespace Dvonn_Console
                         {
                             // else, if user doesn't want to go back to menu, execute move...
                             dvonnBoard.MakeMove(chosenMove);
+                            dvonnGame.gameMoveList.Add(chosenMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(chosenMove, PieceID.White);
 
                         }
                         //Do a check for dvonn collapse, and if true, execute and make comment.
-                        ruleBook.CheckDvonnCollapse();
+                        ruleBook.CheckDvonnCollapse(chosenMove, true);
 
                         //After White's move both players' options need to be analyzed.
                         premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
@@ -83,14 +84,15 @@ namespace Dvonn_Console
                         //Check whether game has ended. 
                         if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
-                            typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
+                            DoEndOFGameRoutine();
                             gamerunning = false;
                             break; // when returned, close console
                         }
-
+                        
                         //Check if black has any legal moves
                         if (ruleBook.PassCondition(premoveComputer) == true)
                         {
+                            dvonnGame.gameMoveList.Add(new Move(PieceID.Black));
                             Console.WriteLine();
                             Console.WriteLine("Computer has no legal moves. It's your turn again.");
                             break;
@@ -103,18 +105,20 @@ namespace Dvonn_Console
                         {
                             Move aiMove = aiAgent.ComputeAiMove(dvonnBoard.SendPosition(), PieceID.Black);
                             dvonnBoard.MakeMove(aiMove);
+                            dvonnGame.gameMoveList.Add(aiMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(aiMove, PieceID.Black);
+                            ruleBook.CheckDvonnCollapse(aiMove, true);
                         }
                         else
                         {
                             Move randomMove = PickRandomMove(premoveComputer);
                             dvonnBoard.MakeMove(randomMove);
+                            dvonnGame.gameMoveList.Add(randomMove);
                             dvonnBoard.VisualizeBoard();
                             typeWriter.MoveComment(randomMove, PieceID.Black);
+                            ruleBook.CheckDvonnCollapse(randomMove, true);
                         }
-                        //Do a check for dvonn collapse, and if true, execute and make comment.
-                        ruleBook.CheckDvonnCollapse();
 
                         //After Black's move both players' options need to be analyzed.
                         premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
@@ -123,10 +127,9 @@ namespace Dvonn_Console
                         //Again, this time after blacks move, check whether game has ended.
                         if (ruleBook.GameEndCondition(premovePlayer, premoveComputer) == true)
                         {
-                            WaitForUser();
-                            typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
-                            gamerunning = false; // when returned, close console
-                            break;
+                            DoEndOFGameRoutine();
+                            gamerunning = false;
+                            break; // when returned, close console
                         }
 
                         //Check if white has any legal moves
@@ -135,7 +138,7 @@ namespace Dvonn_Console
                             PreMove newMoveOption = RepeatedRandomMove(premoveComputer);
                             if (newMoveOption == null)
                             {
-                                typeWriter.GameEndText(ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black)); //the game is over...
+                                DoEndOFGameRoutine();
                                 gamerunning = false; // when returned, close console
                                 break;
                             }
@@ -220,7 +223,12 @@ namespace Dvonn_Console
                         dvonnBoard.ReceivePosition(partialDvonnGame);
                         premovePlayer = ruleBook.ManufacturePreMove(PieceID.White);
                         dvonnBoard.VisualizeBoard();
-                        ruleBook.CheckDvonnCollapse();
+                        ruleBook.CheckDvonnCollapse(null, false);
+                        break;
+
+                    case "8": //Auto finish
+                        AutoFinish();
+                        gamerunning = false;
                         break;
 
                     default:
@@ -230,6 +238,54 @@ namespace Dvonn_Console
                 }
             }
 
+        }
+
+        private void DoEndOFGameRoutine()
+        {
+            int whiteScore = ruleBook.GetScore(PieceID.White);
+            int blackScore = ruleBook.GetScore(PieceID.Black);
+            dvonnGame.timeEnded = DateTime.Now;
+            dvonnGame.gameResultWhite = whiteScore;
+            dvonnGame.gameResultBlack = blackScore;
+            typeWriter.GameEndText(whiteScore, blackScore);
+            Console.WriteLine(dvonnGame.ToString());
+            WaitForUser();
+        }
+
+        private void AutoFinish()
+        {
+            PieceID playerToMove = dvonnGame.humanPlayerColor;
+            PreMove currentAiPreMove;
+            PreMove opponentPremove;
+
+            Console.WriteLine();
+            Console.WriteLine("AI will now finish the game");
+            WaitForUser();
+
+            do
+            {
+                currentAiPreMove = ruleBook.ManufacturePreMove(playerToMove);
+                if (currentAiPreMove.legalMoves.Count > 0)
+                {
+                    Move randomMove = PickRandomMove(currentAiPreMove);
+                    dvonnBoard.MakeMove(randomMove);
+                    dvonnGame.gameMoveList.Add(randomMove);
+                    ruleBook.CheckDvonnCollapse(randomMove, false);
+                }
+                opponentPremove = ruleBook.ManufacturePreMove(playerToMove.ToOpposite());
+
+                if(currentAiPreMove.legalMoves.Count == 0 && ruleBook.GameEndCondition(currentAiPreMove, opponentPremove) == false)
+                {
+                    dvonnGame.gameMoveList.Add(new Move(currentAiPreMove.responsibleColor));
+                }
+                
+                playerToMove = playerToMove.ToOpposite();
+
+            } while (ruleBook.GameEndCondition(currentAiPreMove, opponentPremove ) == false);
+            
+            dvonnBoard.VisualizeBoard();
+            DoEndOFGameRoutine();
+            
         }
 
         public Move GetUserMoveInput(PreMove premovePlayer)
@@ -335,14 +391,15 @@ namespace Dvonn_Console
                 WaitForUser();
                 Move randomMove = PickRandomMove(currentAiPreMove);
                 dvonnBoard.MakeMove(randomMove);
+                dvonnGame.gameMoveList.Add(randomMove);
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(randomMove, PieceID.Black);
 
                 currentAiPreMove = ruleBook.ManufacturePreMove(PieceID.Black);
                 currentPlayerPreMove = ruleBook.ManufacturePreMove(PieceID.White);
 
-                //TODO: write how the game should end, game end text, etc...
                 if (ruleBook.GameEndCondition(currentPlayerPreMove, currentAiPreMove) == true) return null;
+                else if (currentAiPreMove.legalMoves.Count == 0) break;
 
             } while (currentPlayerPreMove.legalMoves.Count == 0);
 
@@ -352,7 +409,7 @@ namespace Dvonn_Console
         public void WaitForUser()
         {
             Console.WriteLine();
-            Console.WriteLine("Press any key to continue...");
+            Console.Write("Press any key to continue...");
             Console.ReadKey();
         }
 

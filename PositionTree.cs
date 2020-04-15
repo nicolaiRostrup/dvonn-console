@@ -228,20 +228,6 @@ namespace Dvonn_Console
                 }
             }
 
-            //int totalEvaluation = 0L;
-            //int totalStackCount = 0L;
-            //foreach (Node endPoint in currentEndPoints)
-            //{
-            //    totalEvaluation += endPoint.evaluation;
-            //    totalStackCount += endPoint.resultingPosition.NumberOfStacks();
-            //}
-            //float meanEvaluation = (float)totalEvaluation / currentEndPoints.Count;
-            //float meanStackCount = (float)totalStackCount / currentEndPoints.Count;
-
-            //sb.AppendLine("The tree has  " + currentEndPoints.Count + " leaves.");
-            //sb.AppendLine("The leaves have a mean evaluation of: " + meanEvaluation);
-            //sb.AppendLine("The leaves have a mean stack count of: " + meanStackCount);
-
             return sb.ToString();
 
         }

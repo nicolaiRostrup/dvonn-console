@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Dvonn_Console
 {
@@ -19,7 +16,7 @@ namespace Dvonn_Console
 
     public enum PieceID
     {
-        Dvonn, White, Black, Neutral
+        Dvonn, White, Black
     }
 
     public static class PieceIDExtensions
@@ -29,7 +26,6 @@ namespace Dvonn_Console
             if (id == PieceID.Dvonn) return 'D';
             if (id == PieceID.White) return 'W';
             if (id == PieceID.Black) return 'B';
-            if (id == PieceID.Neutral) return 'N';
 
             throw new ArgumentException("Unexpected piece id received: " + id.ToString());
 

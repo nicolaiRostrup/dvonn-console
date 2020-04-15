@@ -54,14 +54,22 @@ namespace Dvonn_Console
                 stacks[i] = positionToCopy.stacks[i];
             }
         }
+
+        
+
+        //position notation 2:
+        //"W/W/BW/-/B/-/-/-/B"
+        //"/-/-/-/-/-/WBDBBWWW/BW/-/B/-/-/-/B"
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("Content of position: ");
-            foreach(string stack in stacks)
+
+            for (int i = 0; i < 49; i++)
             {
-                if (stack.Length == 0) sb.Append("(), ");
-                else sb.Append(stack + ", ");
+                if (stacks[i].Length == 0) sb.Append("/-");
+                else sb.Append("/" + stacks[i]);
+
+                if (i == 8 || i == 18 || i == 29 || i == 39 || i == 48) sb.AppendLine("/");
             }
             return sb.ToString();
         }

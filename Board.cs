@@ -149,7 +149,7 @@ namespace Dvonn_Console
             if (c == 'B') return PieceID.Black;
             if (c == 'D') return PieceID.Dvonn;
 
-            else return PieceID.Neutral;
+            throw new ArgumentException("Unexpected char received: " + c);
         }
 
         char GetChar(PieceID pieceColor)
@@ -158,7 +158,7 @@ namespace Dvonn_Console
             if (pieceColor == PieceID.White) return 'W';
             if (pieceColor == PieceID.Dvonn) return 'D';
 
-            else return 'e'; //e for error;
+            throw new ArgumentException("Unexpected piece id received: " + pieceColor.ToString());
 
         }
 

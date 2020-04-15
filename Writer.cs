@@ -49,6 +49,8 @@ namespace Dvonn_Console
             Console.WriteLine("4 Visualize board");
             Console.WriteLine("5 Read the rules");
             Console.WriteLine("6 Exit");
+            Console.WriteLine("7 EndGame setup");
+            Console.WriteLine("8 AutoFinish (random moves)");
             Console.WriteLine();
 
         }
@@ -106,7 +108,7 @@ namespace Dvonn_Console
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
                 Console.WriteLine("The game is over");
-                Console.WriteLine("Computer has won, playing random moves");
+                Console.WriteLine("Computer has won");
                 Console.WriteLine("The end score was: ");
                 Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();
@@ -130,7 +132,7 @@ namespace Dvonn_Console
         public void WaitForUser()
         {
             Console.WriteLine();
-            Console.WriteLine("Press any key to continue...");
+            Console.Write("Press any key to continue...");
             Console.ReadKey();
         }
 

@@ -5,18 +5,25 @@ namespace Dvonn_Console
 {
     class TreeCrawler
     {
-        private Node currentNode = null;
         public PositionTree tree;
+        private Node currentNode = null;
+        private AI aiAgent = null;
 
         //for debug purposes:
         private int pruneCounter = 0;
         private int leavesBefore = 0;
         private int leavesAfter = 0;
+        private int evaluatedPositions = 0;
+        //for debug, regarding endpoint evaluations
+        int minimumEvaluation = 0;
+        int maximumEvaluation = 0;
+        bool evaluationSpanInitiated = false;
 
 
-        public TreeCrawler(PositionTree tree)
+        public TreeCrawler(PositionTree tree, AI aiAgent)
         {
             this.tree = tree;
+            this.aiAgent = aiAgent;
         }
 
         public void AlphaBetaPruning()
@@ -72,6 +79,9 @@ namespace Dvonn_Console
                     Console.WriteLine("Pruned " + pruneCounter + " branches. ");
                     Console.WriteLine("Leaves before: " + leavesBefore);
                     Console.WriteLine("Leaves after: " + leavesAfter);
+                    Console.WriteLine("AI: Evaluated " + evaluatedPositions + " positions");
+                    Console.WriteLine("AI: Minimum evaluation value found: " + minimumEvaluation);
+                    Console.WriteLine("AI: Maximum evaluation value found: " + maximumEvaluation);
                     return;
                 }
 
@@ -121,7 +131,7 @@ namespace Dvonn_Console
 
             while (ExistMoreEndnodes(childCounter))
             {
-                int value = CopyEndPointValue(childCounter);
+                int value = EvaluatePosition(childCounter);
 
                 if (IsMaximumGeneration(currentNode))
                 {
@@ -145,9 +155,28 @@ namespace Dvonn_Console
             GoTowardsRoot();
         }
 
-        private int CopyEndPointValue(int i)
+        private int EvaluatePosition(int i)
         {
-            return currentNode.children[i].move.evaluation;
+            Move thisMove = currentNode.children[i].move;
+            Position thisPosition = currentNode.resultingPosition;
+            int thisEval = aiAgent.EvaluatePosition(thisMove, thisPosition);
+            currentNode.children[i].move.evaluation = thisEval;
+            evaluatedPositions++;
+
+            //for debug:
+            if (evaluationSpanInitiated == false)
+            {
+                maximumEvaluation = thisEval;
+                minimumEvaluation = thisEval;
+                evaluationSpanInitiated = true;
+            }
+            else
+            {
+                if (thisEval > maximumEvaluation) maximumEvaluation = thisEval;
+                if (thisEval < minimumEvaluation) minimumEvaluation = thisEval;
+            }
+
+            return thisEval;
 
         }
 

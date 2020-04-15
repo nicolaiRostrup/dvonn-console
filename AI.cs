@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Dvonn_Console
 {
@@ -14,13 +15,10 @@ namespace Dvonn_Console
         private Move chosenMove = null;
 
         //resulting number of endpoints may in reality be considerarbly larger, as the process is only stopped after entire generation branching.
-        private int maxEndPoints = 1000;
-
+        private int maxEndPoints = 2000;
         private int algorithmChoiceLimit = 34;
-
         private int endgameStyleTreeLimit = 8;
-
-        int depthCounter = 0;
+        private int depthCounter = 0;
 
 
         public AI()
@@ -48,44 +46,32 @@ namespace Dvonn_Console
                 if (premove.legalMoves.Count > endgameStyleTreeLimit)
                 {
                     var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                    Console.WriteLine("AI: Tree creation first batch begun.");
+                    Console.WriteLine("AI: Intermediate analysis (with alfa/beta pruning) begun.");
                     CreateTree();
-                    EvaluateEndPoints();
-                    AlphaBetaPruning();
-                    Console.WriteLine("AI: Tree creation first batch ended.");
+                    PruneAndEvaluate();
+                    PerformMiniMax();
+                    Console.WriteLine("AI: Intermediate analysis (with alfa/beta pruning) ended.");
                     watch_1.Stop();
                     var elapsedMs_1 = watch_1.ElapsedMilliseconds;
 
-                    var watch_2 = System.Diagnostics.Stopwatch.StartNew();
-                    Console.WriteLine("AI: Tree creation second batch begun.");
-                    depthCounter++;
-                    CreateTree();
-                    EvaluateEndPoints();
-                    PerformMiniMax();
-                    Console.WriteLine("AI: Tree creation second batch ended.");
-                    watch_2.Stop();
-                    var elapsedMs_2 = watch_2.ElapsedMilliseconds;
-
                     Console.WriteLine();
-                    Console.WriteLine("Tree creation first batch took: " + elapsedMs_1 + " milliseconds");
-                    Console.WriteLine("Tree creation second batch took: " + elapsedMs_2 + " milliseconds");
-                    Console.WriteLine("Total calculation time: " + (elapsedMs_1 + elapsedMs_2) + " milliseconds");
+                    Console.WriteLine("Intermediate game style analysis time: " + (elapsedMs_1) + " milliseconds");
                     Console.WriteLine("Last generation branched: " + depthCounter);
                     Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
                 }
                 else
                 {
-                    var watch_3 = System.Diagnostics.Stopwatch.StartNew();
-                    Console.WriteLine("AI: Tree creation end game style begun.");
+                    var watch_2 = System.Diagnostics.Stopwatch.StartNew();
+                    Console.WriteLine("AI: End game style (full) analysis begun.");
                     CreateTree();
                     EvaluateEndPoints();
                     PerformMiniMax();
-                    Console.WriteLine("AI: Tree creation end game style ended.");
-                    watch_3.Stop();
-                    var elapsedMs_3 = watch_3.ElapsedMilliseconds;
+                    Console.WriteLine("AI: End game style (full) analysis ended.");
+                    watch_2.Stop();
+                    var elapsedMs_2 = watch_2.ElapsedMilliseconds;
 
                     Console.WriteLine();
-                    Console.WriteLine("Tree creation end game style took: " + elapsedMs_3 + " milliseconds");
+                    Console.WriteLine("End game style analysis took: " + elapsedMs_2 + " milliseconds");
                     Console.WriteLine("Last generation branched: " + depthCounter);
                     Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
 
@@ -101,41 +87,48 @@ namespace Dvonn_Console
         }
 
 
-        //Algorithm used in beginning of game
+        //Algorithm used in beginning of game, and if a list of canidate moves has even evalutaion.
         private Move UseSimpleAlgorithm(Position currentPosition)
         {
-            Move chosenMove = null;
             Position beforePosition = currentPosition;
             aiBoard.ReceivePosition(beforePosition);
             PreMove beforeOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color before any move has been chosen.
 
-            foreach (Move move in beforeOptions.legalMoves)
+            return ChooseAmongstCandidates(beforeOptions.legalMoves, beforePosition);
+        }
+
+        private Move ChooseAmongstCandidates(List<Move> moveList, Position beforePosition)
+        {
+
+            foreach (Move move in moveList)
             {
                 Position afterPosition = new Position();
                 afterPosition.Copy(beforePosition);
                 afterPosition.MakeMove(move);
                 aiBoard.ReceivePosition(afterPosition);
-                ruleBook.DoDvonnCollapseRoutine();
+                ruleBook.CheckDvonnCollapse(move, false);
                 PreMove afterOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color after considered move has been made
 
-                if (beforePosition.TopPiece(move.target) != playerToMove.ToChar()) move.evaluation += 500;
-                if (afterPosition.stacks[move.target].Length == 2) move.evaluation += 500;
-                if (afterPosition.stacks[move.target].Contains("D") && !beforePosition.stacks[move.source].Contains("D") && (beforePosition.TopPiece(move.target) != playerToMove.ToChar())) move.evaluation += 1000;
-                if (afterPosition.stacks[move.target].Length > 2 && !afterPosition.stacks[move.target].Contains("D")) move.evaluation -= 500;
-                if (aiBoard.isDvonnLander(move.target, afterOptions)) move.evaluation += 500;
+                if (beforePosition.TopPiece(move.target) != playerToMove.ToChar()) move.secondaryEvaluation += 500;
+                if (afterPosition.stacks[move.target].Length == 2) move.secondaryEvaluation += 500;
+                if (afterPosition.stacks[move.target].Contains("D") && !beforePosition.stacks[move.source].Contains("D") && (beforePosition.TopPiece(move.target) != playerToMove.ToChar())) move.secondaryEvaluation += 1000;
+                if (afterPosition.stacks[move.target].Length > 2 && !afterPosition.stacks[move.target].Contains("D")) move.secondaryEvaluation -= 500;
+                if (aiBoard.isDvonnLander(move.target, afterOptions)) move.secondaryEvaluation += 500;
 
             }
-            int foundEval = 0;
-            foreach (Move move in beforeOptions.legalMoves)
-            {
-                if (move.evaluation > foundEval)
-                {
-                    chosenMove = move;
-                    foundEval = move.evaluation;
-                }
-            }
 
-            return chosenMove;
+            moveList.Sort((x, y) => y.secondaryEvaluation.CompareTo(x.secondaryEvaluation));
+
+            Console.WriteLine();
+            Console.WriteLine("AI: Sorted list of moves, and chose best move");
+            Console.WriteLine("AI: Found " + moveList.Count + " candidate moves");
+            Console.WriteLine("Best candidate move eval: " + moveList[0].evaluation + ", secondary eval: " + moveList[0].secondaryEvaluation);
+            Console.WriteLine("Worst candidate move eval: " + moveList.LastOrDefault().evaluation + ", secondary eval: " + moveList.LastOrDefault().secondaryEvaluation);
+            Console.WriteLine("Chose : " + moveList[0].ToString() + " with a secondary evaluation of " + moveList[0].secondaryEvaluation);
+
+
+            return moveList[0];
+
         }
 
         private void CreateTree()
@@ -163,7 +156,8 @@ namespace Dvonn_Console
             foreach (Node endPoint in allLeaves)
             {
                 aiBoard.ReceivePosition(endPoint.resultingPosition);
-                ruleBook.DoDvonnCollapseRoutine();
+                if (endPoint == dvonnTree.root) ruleBook.CheckDvonnCollapse(null, false);
+                else ruleBook.CheckDvonnCollapse(endPoint.move, false);
 
                 PreMove premovePlayer = ruleBook.ManufacturePreMove(tempPlayerToMove);
                 PreMove premoveOpponent = ruleBook.ManufacturePreMove(tempPlayerToMove.ToOpposite());
@@ -207,9 +201,9 @@ namespace Dvonn_Console
 
         //Perform alpha beta pruning on lower branches to minimize number of endpoints (i.e. leaves) to be evaluated.
         //See also: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
-        public void AlphaBetaPruning()
+        public void PruneAndEvaluate()
         {
-            TreeCrawler treeCrawler = new TreeCrawler(dvonnTree);
+            TreeCrawler treeCrawler = new TreeCrawler(dvonnTree, this);
             treeCrawler.AlphaBetaPruning();
 
         }
@@ -259,11 +253,11 @@ namespace Dvonn_Console
         //If the resulting position gives the opponent (human player) very few options and a bad position, the evaluation will be positive and high.
         //If on the other hand the resulting position is excellent for opponent, the evaluation will be negative and high.
         //If the position gives equal chances to both players, it will be evaluated to 0.
-        private int EvaluatePosition(Move move, Position resultingPosition)
+        public int EvaluatePosition(Move move, Position resultingPosition)
         {
             int thisEval = 0;
             aiBoard.ReceivePosition(resultingPosition);
-            ruleBook.DoDvonnCollapseRoutine();
+            ruleBook.CheckDvonnCollapse(move, false);
 
             //todo: player to move could be the same, if opponent has no legal moves...(?)
             //
@@ -403,17 +397,30 @@ namespace Dvonn_Console
         private void EndMiniMax()
         {
             int bestMoveEvaluation = FindValueAmongstChildren(dvonnTree.root);
-            chosenMove = dvonnTree.root.children.Find(node => node.move.evaluation == bestMoveEvaluation).move;
+            List<Node> nodes = dvonnTree.root.children.FindAll(node => node.move.evaluation == bestMoveEvaluation);
+
+            List<Move> candidateMoves = new List<Move>();
+            foreach (Node node in nodes)
+            {
+                candidateMoves.Add(node.move);
+            }
+
+            if (candidateMoves.Count == 1)
+            {
+                chosenMove = candidateMoves[0];
+                Console.WriteLine("AI: Found single candidate moves");
+            }
+            else
+            {
+                chosenMove = ChooseAmongstCandidates(candidateMoves, dvonnTree.root.resultingPosition);
+            }
+
             Console.WriteLine("AI: Minimax complete. Best move found and has an evaluation of: " + chosenMove.evaluation);
             Console.WriteLine("AI: The move is: " + chosenMove.ToString());
+            
 
-            //todo: if more than one canidate move do simple algorithm to choose best candidate...
-            List<Node> canidateMoves = dvonnTree.root.children.FindAll(node => node.move.evaluation == bestMoveEvaluation);
-            foreach (Node node in canidateMoves)
-            {
-                Console.WriteLine("Found candidate move: " + node.move.ToString());
-            }
         }
+
 
         private int FindValueAmongstChildren(Node parent)
         {
