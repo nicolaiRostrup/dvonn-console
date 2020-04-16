@@ -400,6 +400,9 @@ namespace Dvonn_Console
 
                 if (ruleBook.GameEndCondition(currentPlayerPreMove, currentAiPreMove) == true) return null;
                 else if (currentAiPreMove.legalMoves.Count == 0) break;
+                
+                //Add pass move:
+                dvonnGame.gameMoveList.Add(new Move(currentPlayerPreMove.responsibleColor));
 
             } while (currentPlayerPreMove.legalMoves.Count == 0);
 

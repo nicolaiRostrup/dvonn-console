@@ -370,7 +370,7 @@ namespace Dvonn_Console
                     if (dvonnStacks.Contains(tower)) analysis.aiColorDvonnTowerControl++;
                 }
             }
-            
+
             return analysis;
         }
 
@@ -475,6 +475,18 @@ namespace Dvonn_Console
 
         }
 
+        public List<int> GetSingles(List<int> theseStacks)
+        {
+            List<int> singles = new List<int>();
+            foreach (int fieldID in theseStacks)
+            {
+                if (entireBoard[fieldID].stack.Count == 1) singles.Add(fieldID);
+
+            }
+            return singles;
+
+        }
+
         public int GetZebraCount(PieceID color)
         {
             int zebraCounter = 0;
@@ -494,7 +506,7 @@ namespace Dvonn_Console
 
         }
 
-        public int DvonnLanders(PreMove premove)
+        public List<int> DvonnLanders(PreMove premove)
         {
             List<int> dvonnStacks = GetDvonnStacks();
 
@@ -505,13 +517,13 @@ namespace Dvonn_Console
                 List<int> landers = GetLanders(fieldID, premove);
                 foreach (int landerID in landers)
                 {
-                    if (!dvonnLanders.Contains(landerID))
-                    {
-                        dvonnLanders.Add(landerID);
-                    }
+                    //this will possibly result in several same landerID's in dvonnLanders
+                    // as one lander could hit more than one dvonn tower.
+                    dvonnLanders.Add(landerID);
+
                 }
             }
-            return dvonnLanders.Count;
+            return dvonnLanders;
         }
 
         public bool isDvonnLander(int fieldID, PreMove premove)

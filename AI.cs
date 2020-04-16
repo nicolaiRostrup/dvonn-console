@@ -12,13 +12,8 @@ namespace Dvonn_Console
 
         private PieceID playerToMove;
         private PieceID tempPlayerToMove;
-        private Move chosenMove = null;
 
-        //resulting number of endpoints may in reality be considerarbly larger, as the process is only stopped after entire generation branching.
-        private int maxEndPoints = 2000;
-        private int algorithmChoiceLimit = 34;
-        private int endgameStyleTreeLimit = 8;
-        private int depthCounter = 0;
+        private int endgameLimit = 8;
 
 
         public AI()
@@ -32,120 +27,76 @@ namespace Dvonn_Console
 
         public Move ComputeAiMove(Position currentPosition, PieceID playerToMove)
         {
+            Move chosenMove;
+            int depthCounter;
             this.playerToMove = playerToMove;
             tempPlayerToMove = playerToMove;
 
             dvonnTree = new PositionTree(currentPosition);
-            depthCounter = 0;
+            aiBoard.ReceivePosition(currentPosition);
+            PreMove premove = ruleBook.ManufacturePreMove(playerToMove);
 
-            if (currentPosition.NumberOfStacks() < algorithmChoiceLimit)
+            int maxEndPoints = 160000 / premove.legalMoves.Count;
+
+            if (premove.legalMoves.Count > endgameLimit)
             {
-                aiBoard.ReceivePosition(currentPosition);
-                PreMove premove = ruleBook.ManufacturePreMove(playerToMove);
+                var watch_1 = System.Diagnostics.Stopwatch.StartNew();
+                Console.WriteLine();
+                Console.WriteLine("AI: Normal analysis (with alfa/beta pruning) begun.");
+                depthCounter = CreateTree(maxEndPoints);
+                PruneAndEvaluate();
+                chosenMove = PerformMiniMax();
+                Console.WriteLine("AI: Normal analysis (with alfa/beta pruning) ended.");
+                watch_1.Stop();
+                var elapsedMs_1 = watch_1.ElapsedMilliseconds;
 
-                if (premove.legalMoves.Count > endgameStyleTreeLimit)
-                {
-                    var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                    Console.WriteLine("AI: Intermediate analysis (with alfa/beta pruning) begun.");
-                    CreateTree();
-                    PruneAndEvaluate();
-                    PerformMiniMax();
-                    Console.WriteLine("AI: Intermediate analysis (with alfa/beta pruning) ended.");
-                    watch_1.Stop();
-                    var elapsedMs_1 = watch_1.ElapsedMilliseconds;
+                Console.WriteLine();
+                Console.WriteLine("Normal analysis time: " + (elapsedMs_1) + " milliseconds");
+                Console.WriteLine("Last generation branched: " + depthCounter);
+                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
+            }
+            else
+            {
+                var watch_2 = System.Diagnostics.Stopwatch.StartNew();
+                Console.WriteLine();
+                Console.WriteLine("AI: Endgame analysis begun.");
+                depthCounter = CreateTree(maxEndPoints);
+                EvaluateEndPoints();
+                chosenMove = PerformMiniMax();
+                Console.WriteLine("AI: Endgame analysis ended.");
+                watch_2.Stop();
+                var elapsedMs_2 = watch_2.ElapsedMilliseconds;
 
-                    Console.WriteLine();
-                    Console.WriteLine("Intermediate game style analysis time: " + (elapsedMs_1) + " milliseconds");
-                    Console.WriteLine("Last generation branched: " + depthCounter);
-                    Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-                }
-                else
-                {
-                    var watch_2 = System.Diagnostics.Stopwatch.StartNew();
-                    Console.WriteLine("AI: End game style (full) analysis begun.");
-                    CreateTree();
-                    EvaluateEndPoints();
-                    PerformMiniMax();
-                    Console.WriteLine("AI: End game style (full) analysis ended.");
-                    watch_2.Stop();
-                    var elapsedMs_2 = watch_2.ElapsedMilliseconds;
-
-                    Console.WriteLine();
-                    Console.WriteLine("End game style analysis took: " + elapsedMs_2 + " milliseconds");
-                    Console.WriteLine("Last generation branched: " + depthCounter);
-                    Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-
-                }
-
-                WaitForUser();
-                return chosenMove;
+                Console.WriteLine();
+                Console.WriteLine("Endgame analysis took: " + elapsedMs_2 + " milliseconds");
+                Console.WriteLine("Last generation branched: " + depthCounter);
+                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
             }
 
-            else return UseSimpleAlgorithm(currentPosition);
-
-
-        }
-
-
-        //Algorithm used in beginning of game, and if a list of canidate moves has even evalutaion.
-        private Move UseSimpleAlgorithm(Position currentPosition)
-        {
-            Position beforePosition = currentPosition;
-            aiBoard.ReceivePosition(beforePosition);
-            PreMove beforeOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color before any move has been chosen.
-
-            return ChooseAmongstCandidates(beforeOptions.legalMoves, beforePosition);
-        }
-
-        private Move ChooseAmongstCandidates(List<Move> moveList, Position beforePosition)
-        {
-
-            foreach (Move move in moveList)
-            {
-                Position afterPosition = new Position();
-                afterPosition.Copy(beforePosition);
-                afterPosition.MakeMove(move);
-                aiBoard.ReceivePosition(afterPosition);
-                ruleBook.CheckDvonnCollapse(move, false);
-                PreMove afterOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color after considered move has been made
-
-                if (beforePosition.TopPiece(move.target) != playerToMove.ToChar()) move.secondaryEvaluation += 500;
-                if (afterPosition.stacks[move.target].Length == 2) move.secondaryEvaluation += 500;
-                if (afterPosition.stacks[move.target].Contains("D") && !beforePosition.stacks[move.source].Contains("D") && (beforePosition.TopPiece(move.target) != playerToMove.ToChar())) move.secondaryEvaluation += 1000;
-                if (afterPosition.stacks[move.target].Length > 2 && !afterPosition.stacks[move.target].Contains("D")) move.secondaryEvaluation -= 500;
-                if (aiBoard.isDvonnLander(move.target, afterOptions)) move.secondaryEvaluation += 500;
-
-            }
-
-            moveList.Sort((x, y) => y.secondaryEvaluation.CompareTo(x.secondaryEvaluation));
-
-            Console.WriteLine();
-            Console.WriteLine("AI: Sorted list of moves, and chose best move");
-            Console.WriteLine("AI: Found " + moveList.Count + " candidate moves");
-            Console.WriteLine("Best candidate move eval: " + moveList[0].evaluation + ", secondary eval: " + moveList[0].secondaryEvaluation);
-            Console.WriteLine("Worst candidate move eval: " + moveList.LastOrDefault().evaluation + ", secondary eval: " + moveList.LastOrDefault().secondaryEvaluation);
-            Console.WriteLine("Chose : " + moveList[0].ToString() + " with a secondary evaluation of " + moveList[0].secondaryEvaluation);
-
-
-            return moveList[0];
+            WaitForUser();
+            return chosenMove;
 
         }
 
-        private void CreateTree()
+
+        private int CreateTree(int maxEndPoints)
         {
+            int depthCounter = 0;
+
             while (true)
             {
-                long createNodeCounter = BranchEndpoints(depthCounter);
-                if (createNodeCounter > maxEndPoints || createNodeCounter == 0) break;
+                int createdNodes = BranchEndpoints(depthCounter);
+                if (createdNodes > maxEndPoints || createdNodes == 0) break;
                 else depthCounter++;
             }
+            return depthCounter;
 
         }
 
 
-        private long BranchEndpoints(int depthCounter)
+        private int BranchEndpoints(int depthCounter)
         {
-            long createNodeCounter = 0L;
+            int newNodeCounter = 0;
             List<Node> allLeaves = dvonnTree.GetAllLeaves();
 
             Console.WriteLine();
@@ -162,38 +113,38 @@ namespace Dvonn_Console
                 PreMove premovePlayer = ruleBook.ManufacturePreMove(tempPlayerToMove);
                 PreMove premoveOpponent = ruleBook.ManufacturePreMove(tempPlayerToMove.ToOpposite());
 
-                //Check whether game has ended. 
+                //Check if neither players have any legal moves, if yes, this endpoint doesn't branch. 
                 if (ruleBook.GameEndCondition(premovePlayer, premoveOpponent) == true)
                 {
                     continue;
                 }
 
-                //Check if moving player has any legal moves
+                //Check if moving player has no legal moves, if yes, a pass move is inserted in the tree
                 if (ruleBook.PassCondition(premovePlayer) == true)
                 {
                     Move passMove = new Move(tempPlayerToMove);
                     dvonnTree.InsertChild(new Node(passMove, endPoint.resultingPosition), endPoint);
-                    createNodeCounter++;
+                    newNodeCounter++;
                     continue;
                 }
 
                 foreach (Move move in premovePlayer.legalMoves)
                 {
                     Position newPosition = new Position();
-                    newPosition.Copy(endPoint.resultingPosition);
+                    newPosition.Copy(endPoint.resultingPosition); //is this necessary?
                     newPosition.MakeMove(move);
 
                     dvonnTree.InsertChild(new Node(move, newPosition), endPoint);
-                    createNodeCounter++;
+                    newNodeCounter++;
                 }
             }
 
             Console.WriteLine("AI: Branching for depth level " + depthCounter + " is complete.");
-            Console.WriteLine("AI: added total number of nodes: " + createNodeCounter);
+            Console.WriteLine("AI: added total number of nodes: " + newNodeCounter);
 
             tempPlayerToMove = tempPlayerToMove.ToOpposite();
 
-            return createNodeCounter;
+            return newNodeCounter;
 
         }
 
@@ -211,7 +162,7 @@ namespace Dvonn_Console
 
         public void EvaluateEndPoints()
         {
-            //List<Node> allLeaves = dvonnTree.GetAllLeaves();
+            //List<Node> allLeaves = dvonnTree.GetAllLeaves(); - might this be better? should non-outer leaves be ignored??
             List<Node> outerLeavesOnly = dvonnTree.GetOuterLeaves();
 
             //for debug:
@@ -224,6 +175,7 @@ namespace Dvonn_Console
             foreach (Node endPoint in outerLeavesOnly)
             {
                 int thisEval = EvaluatePosition(endPoint.move, endPoint.resultingPosition);
+                endPoint.move.evaluation = thisEval;
 
                 //for debug:
                 if (evaluationSpanInitiated == false)
@@ -238,7 +190,6 @@ namespace Dvonn_Console
                     if (thisEval < minimumEvaluation) minimumEvaluation = thisEval;
                 }
 
-                endPoint.move.evaluation = thisEval;
             }
 
             Console.WriteLine();
@@ -249,125 +200,145 @@ namespace Dvonn_Console
 
         }
 
-        //Position is evaluated through the options of opponent after move has been executed
-        //If the resulting position gives the opponent (human player) very few options and a bad position, the evaluation will be positive and high.
-        //If on the other hand the resulting position is excellent for opponent, the evaluation will be negative and high.
+        //Position is evaluated through the options of both 'next player' (after the move has been executed).
+        //If the resulting position gives the next player many options and a good position, the evaluation will be positive and high.
         //If the position gives equal chances to both players, it will be evaluated to 0.
+        //IMPORTANT: finally, the evaluation is biased according to the generation depth. This means that if the responsible color is equal to class variable 'playerToMove'
+        //the evaluation will be multiplied by -1; But if the responsible color is equal to 'next player', the evaluation will remain unaltered. 
         public int EvaluatePosition(Move move, Position resultingPosition)
         {
             int thisEval = 0;
+            bool doAlgorithm = true;
             aiBoard.ReceivePosition(resultingPosition);
             ruleBook.CheckDvonnCollapse(move, false);
 
-            //todo: player to move could be the same, if opponent has no legal moves...(?)
-            //
-            //But as default the player to move (after the chosen move has been applied), is the opponent:
-            //To move color, in this context, means the next player to move. As this is immediately after an AI move. This means
-            //the opponent of the AI - the human player.
-            PieceID humanPlayer = move.responsibleColor.ToOpposite();
-            PreMove humanOptions = ruleBook.ManufacturePreMove(humanPlayer);
-            PositionReport reportHumanPlayer = ManufacturePositionReport(humanPlayer, humanOptions);
+            PieceID movingColor = move.responsibleColor;
+            PieceID nextPlayer = move.responsibleColor.ToOpposite();
 
-            //Opponent color, in this context, means the opposite player of the next player to move. So this is the AI player (again).
-            PreMove aiOptions = ruleBook.ManufacturePreMove(humanPlayer.ToOpposite());
-            PositionReport reportAiPlayer = ManufacturePositionReport(humanPlayer.ToOpposite(), aiOptions);
+            PreMove nextPlayerOptions = ruleBook.ManufacturePreMove(nextPlayer);
+            PreMove samePlayerOptions = ruleBook.ManufacturePreMove(movingColor);
 
             //Check whether move ends game. If true, return appropriate value 
-            if (ruleBook.GameEndCondition(humanOptions, aiOptions) == true)
+            if (ruleBook.GameEndCondition(nextPlayerOptions, samePlayerOptions) == true)
             {
+                doAlgorithm = false;
                 int whiteScore = ruleBook.GetScore(PieceID.White);
                 int blackScore = ruleBook.GetScore(PieceID.Black);
-                if (whiteScore == blackScore) return 0;
+
                 if (whiteScore > blackScore)
                 {
-                    if (playerToMove == PieceID.White) return int.MaxValue;
-                    else return int.MinValue;
+                    if (movingColor == PieceID.White) thisEval = int.MaxValue;
+                    else thisEval = int.MinValue;
                 }
                 if (blackScore > whiteScore)
                 {
-                    if (playerToMove == PieceID.Black) return int.MaxValue;
-                    else return int.MinValue;
+                    if (movingColor == PieceID.Black) thisEval = int.MaxValue;
+                    else thisEval = int.MinValue;
                 }
             }
 
-            Board.DeadTowerAnalysis deadTowerAnalysis = aiBoard.ManufactureDeadTowerAnalysis(ruleBook, humanPlayer);
+            if (doAlgorithm)
+            {
+                //bonus for controlledstacks
+                List<int> controlledStacks = aiBoard.ControlledStacks(nextPlayer);
+                //thisEval += controlledStacks.Count * 100;
 
-            //controlledstacks: many is good
-            if (reportHumanPlayer.controlledStackCount > reportAiPlayer.controlledStackCount) thisEval -= 200;
-            if (reportHumanPlayer.controlledStackCount < reportAiPlayer.controlledStackCount) thisEval += 200;
+                //bonus for legal moves
+                thisEval += nextPlayerOptions.legalMoves.Count * 200;
 
-            //mean distance to dvonn: low is good
-            //if (reportHumanPlayer.meanDistanceToDvonn > reportAiPlayer.meanDistanceToDvonn) thisEval += 100;
-            //if (reportHumanPlayer.meanDistanceToDvonn < reportAiPlayer.meanDistanceToDvonn) thisEval -= 100;
+                //bonus for single stacks
+                List<int> singles = aiBoard.GetSingles(controlledStacks);
+                thisEval += singles.Count * 250;
 
-            //mean height of own stacks: low is good
-            //if (reportHumanPlayer.meanHeightOfOwnStacks > reportAiPlayer.meanHeightOfOwnStacks) thisEval += 200;
-            //if (reportHumanPlayer.meanHeightOfOwnStacks < reportAiPlayer.meanHeightOfOwnStacks) thisEval -= 200;
+                //bonus for singles that land on dvonn
+                List<int> dvonnLanders = aiBoard.DvonnLanders(nextPlayerOptions);
+                foreach (int single in singles)
+                {
+                    if (dvonnLanders.Contains(single)) thisEval += 800;
+                }
 
-            //possible moves: many is good
-            if (reportHumanPlayer.possibleMoves > reportAiPlayer.possibleMoves) thisEval -= 300;
-            if (reportHumanPlayer.possibleMoves < reportAiPlayer.possibleMoves) thisEval += 300;
+                //bonus for dvonn landers
+                thisEval += dvonnLanders.Count * 300;
 
-            //true legal sources: many is good
-            //if (reportHumanPlayer.trueLegalSources > reportAiPlayer.trueLegalSources) thisEval -= 300;
-            //if (reportHumanPlayer.trueLegalSources < reportAiPlayer.trueLegalSources) thisEval += 300;
+                //bonus for double dvonn landers
+                var dvonnLandersGrouping = dvonnLanders.GroupBy(i => i);
+                foreach (var grp in dvonnLandersGrouping)
+                {
+                    if (grp.Count() > 1) thisEval += 800;
 
-            //dvonn landers: many is good
-            if (reportHumanPlayer.dvonnLanders > reportAiPlayer.dvonnLanders) thisEval -= 1500;
-            if (reportHumanPlayer.dvonnLanders < reportAiPlayer.dvonnLanders) thisEval += 1500;
+                }
 
-            //dead tower gain: many is good
-            if (deadTowerAnalysis.humanColorTowerGain > deadTowerAnalysis.aiColorTowerGain) thisEval -= 1000;
-            if (deadTowerAnalysis.humanColorTowerGain < deadTowerAnalysis.aiColorTowerGain) thisEval += 1000;
+                //bonus for landers of landers
+                List<int> dvonnLandersLanders = new List<int>();
+                foreach (int lander in dvonnLanders)
+                {
+                    List<int> landerLanders = aiBoard.GetLanders(lander, nextPlayerOptions);
+                    dvonnLandersLanders.AddRange(landerLanders);
+                    thisEval += landerLanders.Count * 100;
+                }
 
-            //dead tower with dvonn control: more is good
-            thisEval -= deadTowerAnalysis.humanColorDvonnTowerControl * 1000;
-            thisEval += deadTowerAnalysis.aiColorDvonnTowerControl * 1000;
+                //bonus for dvonn dominance (per dvonn tower)
+                List<int> dvonnTowers = aiBoard.GetDvonnStacks();
+                int nextPlayerControlledDvonnTowers = 0;
 
-            return thisEval;
-        }
+                foreach (int tower in dvonnTowers)
+                {
+                    List<int> nextPlayerLanders = aiBoard.GetLanders(tower, nextPlayerOptions);
+                    List<int> samePlayerLanders = aiBoard.GetLanders(tower, samePlayerOptions);
+                    List<int> nextPlayerLostLanders = new List<int>();
+                    List<int> samePlayerLostLanders = new List<int>();
 
-        private PositionReport ManufacturePositionReport(PieceID movingColor, PreMove premove)
-        {
-            PositionReport report = new PositionReport();
+                    foreach (int nextLander in nextPlayerLanders)
+                    {
+                        List<int> nextPlayerLanderLanders = aiBoard.GetLanders(nextLander, nextPlayerOptions);
+                        List<int> samePlayerLanderLanders = aiBoard.GetLanders(nextLander, samePlayerOptions);
 
-            List<int> controlledStacks = aiBoard.ControlledStacks(movingColor);
-            report.controlledStackCount = controlledStacks.Count;
-            //report.meanDistanceToDvonn = aiBoard.GetMeanDistanceToDvonn(controlledStacks);
-            //report.meanHeightOfOwnStacks = aiBoard.GetMeanHeight(controlledStacks);
-            report.possibleMoves = premove.legalMoves.Count;
-            //report.trueLegalSources = premove.trueLegalSources.Count;
-            report.dvonnLanders = aiBoard.DvonnLanders(premove);
+                        if (samePlayerLanderLanders.Count > nextPlayerLanderLanders.Count) nextPlayerLostLanders.Add(nextLander);
 
-            return report;
-        }
+                    }
+                    nextPlayerLanders.RemoveAll(lander => nextPlayerLostLanders.Contains(lander));
 
-        public class PositionReport
-        {
-            public int controlledStackCount = 0;
-            public float meanDistanceToDvonn = 0f;
-            public float meanHeightOfOwnStacks = 0f;
-            public int possibleMoves = 0;
-            public int trueLegalSources = 0;
-            public int dvonnLanders = 0;
+
+                    foreach (int sameLander in samePlayerLanders)
+                    {
+                        List<int> samePlayerLanderLanders = aiBoard.GetLanders(sameLander, samePlayerOptions);
+                        List<int> nextPlayerLanderLanders = aiBoard.GetLanders(sameLander, nextPlayerOptions);
+                        if (nextPlayerLanderLanders.Count > samePlayerLanderLanders.Count) samePlayerLostLanders.Add(sameLander);
+                    }
+                    samePlayerLanders.RemoveAll(lander => samePlayerLostLanders.Contains(lander));
+
+                    if (nextPlayerLanders.Count > samePlayerLanders.Count) nextPlayerControlledDvonnTowers++;
+
+                }
+                thisEval += nextPlayerControlledDvonnTowers * 2000;
+
+                //TODO: Dead towers could have a bearing on the evaluation....
+                //Board.DeadTowerAnalysis deadTowerAnalysis = aiBoard.ManufactureDeadTowerAnalysis(ruleBook, nextPlayer);
+
+            }
+
+            int biasMultiplier = 0;
+            if (playerToMove == movingColor) biasMultiplier = -1;
+            else biasMultiplier = 1;
+
+            if (thisEval == int.MaxValue && biasMultiplier == -1) return int.MinValue;
+            if (thisEval == int.MaxValue && biasMultiplier == 1) return int.MaxValue;
+            if (thisEval == int.MinValue && biasMultiplier == -1) return int.MaxValue;
+            if (thisEval == int.MinValue && biasMultiplier == 1) return int.MinValue;
+
+            return thisEval * biasMultiplier;
 
         }
 
 
         //Finds best move in children of gen 0 (i.e.upcoming AI move) by analyzing PositionTree using
         //minimax algorithm : https://en.wikipedia.org/wiki/Minimax
-        public void PerformMiniMax()
+        public Move PerformMiniMax()
         {
             List<Node> outerLeavesOnly = dvonnTree.GetOuterLeaves();
             List<Node> parentGeneration = dvonnTree.GetParents(outerLeavesOnly);
 
-            if (parentGeneration.Count == 1 && parentGeneration[0] == dvonnTree.root)
-            {
-                EndMiniMax();
-                return;
-            }
-
-            while (true)
+            while (!(parentGeneration.Count == 1 && parentGeneration[0] == dvonnTree.root))
             {
                 foreach (Node parent in parentGeneration)
                 {
@@ -384,18 +355,15 @@ namespace Dvonn_Console
 
                 }
                 parentGeneration = dvonnTree.GetParents(parentGeneration);
-                if (parentGeneration.Count == 1 && parentGeneration[0] == dvonnTree.root)
-                {
-                    EndMiniMax();
-                    break;
-                }
 
             }
 
+            return EndMiniMax();
         }
 
-        private void EndMiniMax()
+        private Move EndMiniMax()
         {
+            Move chosenMove = null;
             int bestMoveEvaluation = FindValueAmongstChildren(dvonnTree.root);
             List<Node> nodes = dvonnTree.root.children.FindAll(node => node.move.evaluation == bestMoveEvaluation);
 
@@ -417,7 +385,8 @@ namespace Dvonn_Console
 
             Console.WriteLine("AI: Minimax complete. Best move found and has an evaluation of: " + chosenMove.evaluation);
             Console.WriteLine("AI: The move is: " + chosenMove.ToString());
-            
+
+            return chosenMove;
 
         }
 
@@ -454,7 +423,41 @@ namespace Dvonn_Console
 
         }
 
-        //--------------------------------------------------------------
+        //Algorithm used if a multitude of candidate moves have even evaluation.
+        private Move ChooseAmongstCandidates(List<Move> moveList, Position beforePosition)
+        {
+            aiBoard.ReceivePosition(beforePosition);
+            ruleBook.CheckDvonnCollapse(null, false);
+            PreMove beforeOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color before considered move has been made
+            int beforeDvonnLanders = aiBoard.DvonnLanders(beforeOptions).Count;
+
+            foreach (Move move in moveList)
+            {
+                Position afterPosition = new Position();
+                afterPosition.Copy(beforePosition);
+                afterPosition.MakeMove(move);
+                aiBoard.ReceivePosition(afterPosition);
+                ruleBook.CheckDvonnCollapse(move, false);
+                PreMove afterOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color after considered move has been made
+
+                if (aiBoard.DvonnLanders(afterOptions).Count > beforeDvonnLanders) move.secondaryEvaluation += 500;
+                if (afterPosition.stacks[move.target].Length == 2) move.secondaryEvaluation += 400;
+                if (beforePosition.TopPiece(move.target) != playerToMove.ToChar()) move.secondaryEvaluation += 300;
+
+            }
+
+            moveList.Sort((x, y) => y.secondaryEvaluation.CompareTo(x.secondaryEvaluation));
+
+            Console.WriteLine();
+            Console.WriteLine("AI: Sorted list of moves, and chose best move");
+            Console.WriteLine("AI: Found " + moveList.Count + " candidate moves");
+            Console.WriteLine("Best candidate move eval: " + moveList[0].evaluation + ", secondary eval: " + moveList[0].secondaryEvaluation);
+            Console.WriteLine("Worst candidate move eval: " + moveList.LastOrDefault().evaluation + ", secondary eval: " + moveList.LastOrDefault().secondaryEvaluation);
+            Console.WriteLine("Chose : " + moveList[0].ToString() + " with a secondary evaluation of " + moveList[0].secondaryEvaluation);
+
+            return moveList[0];
+
+        }
 
         public void WaitForUser()
         {
@@ -462,6 +465,11 @@ namespace Dvonn_Console
             Console.WriteLine("Press any key to continue...");
             Console.ReadKey();
         }
+
+
+        //for test purposes:
+        //--------------------------------------------------------------
+
 
         private void CreateTestTree()
         {
