@@ -38,23 +38,11 @@ namespace Dvonn_Console
             return foundLegalTargets;
         }
 
-        public PreMove ManufacturePreMove(PieceID color)
-        {
-            PreMove premove = new PreMove(color);
-            List<int> notEmptyStacks = FindNotEmptyStacks();
-            List<int> legalSources = LegalSources(color, notEmptyStacks);
-
-            premove.legalMoves = FindLegalMoves(legalSources, color, notEmptyStacks);
-            premove.trueLegalSources = GetTrueLegalSources(premove.legalMoves);
-            premove.trueLegalTargets = GetTrueLegalTargets(premove.legalMoves);
-
-            return premove;
-
-        }
-
-        private List<Move> FindLegalMoves(List<int> sources, PieceID color, List<int> notEmptyStacks)
+        public List<Move> FindLegalMoves(PieceID color)
         {
             List<Move> legalMoves = new List<Move>();
+            List<int> notEmptyStacks = FindNotEmptyStacks();
+            List<int> sources = LegalSources(color);
 
             foreach (int sourceID in sources)
             {
@@ -89,8 +77,9 @@ namespace Dvonn_Console
             return principalTargets;
         }
 
-        private List<int> LegalSources(PieceID colorToMove, List<int> notEmptyStacks)
+        private List<int> LegalSources(PieceID colorToMove)
         {
+            List<int> notEmptyStacks = FindNotEmptyStacks();
             List<int> legalSources = new List<int>();
 
             foreach (int fieldID in notEmptyStacks)
@@ -103,7 +92,7 @@ namespace Dvonn_Console
             return legalSources;
         }
 
-        private List<int> GetTrueLegalSources(List<Move> moveList)
+        public List<int> GetTrueLegalSources(List<Move> moveList)
         {
             List<int> trueLegalSources = new List<int>();
 
@@ -117,7 +106,7 @@ namespace Dvonn_Console
             return trueLegalSources;
         }
 
-        private List<int> GetTrueLegalTargets(List<Move> moveList)
+        public List<int> GetTrueLegalTargets(List<Move> moveList)
         {
             List<int> trueLegalTargets = new List<int>();
 
@@ -255,19 +244,6 @@ namespace Dvonn_Console
 
             return result;
         }
-
-        public bool GameEndCondition(PreMove premoveWhite, PreMove premoveBlack)
-        {
-            if (premoveWhite.trueLegalSources.Count == 0 && premoveBlack.trueLegalSources.Count == 0) return true;
-            else return false;
-        }
-
-        public bool PassCondition(PreMove premove)
-        {
-            if (premove.trueLegalSources.Count == 0) return true;
-            else return false;
-        }
-
 
     }
 }

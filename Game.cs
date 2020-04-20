@@ -10,9 +10,8 @@ namespace Dvonn_Console
         //TODO: write option to choose piece color, and enter name...
         public string whitePlayerName = "";
         public string blackPlayerName = "";
-
-        public readonly bool isAiDriven = false;
-        public readonly bool isRandomPopulated = true;
+        public bool isWhiteAI = false;
+        public bool isBlackAI = false;
         public readonly PieceID humanPlayerColor;
 
         public DateTime? timeBegun = null;
@@ -22,14 +21,26 @@ namespace Dvonn_Console
         public int gameResultWhite = 0;
         public int gameResultBlack = 0;
 
+        private string aiEngineName;
+        private string aiEngineVersion;
 
-        public Game(bool isAiDriven, bool isRandomPopulated, PieceID humanPlayerColor)
+        public Game(PieceID humanPlayerColor, string humanPlayerName, string aiEngineName, string aiEngineVersion)
         {
-            this.isAiDriven = isAiDriven;
-            this.isRandomPopulated = isRandomPopulated;
             this.humanPlayerColor = humanPlayerColor;
-            if (humanPlayerColor == PieceID.White) { whitePlayerName = "human"; blackPlayerName = "AI"; }
-            else { blackPlayerName = "human"; whitePlayerName = "AI"; }
+            this.aiEngineName = aiEngineName;
+            this.aiEngineVersion = aiEngineVersion;
+
+            if (humanPlayerColor == PieceID.White)
+            {
+                whitePlayerName = humanPlayerName;
+                blackPlayerName = aiEngineName + " (v. " + aiEngineVersion + " )";
+            }
+            else
+            {
+                blackPlayerName = humanPlayerName;
+                whitePlayerName = aiEngineName + " (v. " + aiEngineVersion + " )";
+            }
+
         }
 
         public Position RandomPopulate(int dvonnCount, int whiteCount, int blackCount)
@@ -138,6 +149,26 @@ namespace Dvonn_Console
             else return "Game over: Black won: " + result;
         }
 
+        public string ToDataFormat()
+        {
+
+            //            dvonngame summary
+            //white; name
+            // black; ai
+            //  engine; dvonndomina
+            //   engineversion; 1.2
+            //opening; WBBWBBBDWBBBDWWBBBWBWBWBWBWWBB
+            // gameover; y
+            //  begundate; 15 - 04 - 2020 10:59:31
+            //enddate; 15 - 04 - 2020 10:59:50
+            //whiteresult; 18
+            //blackresult; 16
+            //movelist; 3 - 2; 13 - 14; 43 - 44; pass; 23 - 56;
+
+
+            return "";
+        }
+
         public override string ToString()
         {
 
@@ -169,7 +200,7 @@ namespace Dvonn_Console
                 else if (thisMove.source < 10) sb.Append(":  " + thisMove.source + " -> " + thisMove.target);
                 else sb.Append(": " + thisMove.source + " -> " + thisMove.target);
                 if (thisMove.target < 10) sb.Append(" ");
-                if (thisMove.isCollapseMove) sb.Append(" *" + thisMove.collapsedTowers );
+                if (thisMove.isCollapseMove) sb.Append(" *" + thisMove.collapsedTowers);
                 if (timeEnded != null && i == gameLength - 1)
                 {
                     sb.AppendLine(" #");

@@ -10,11 +10,16 @@ namespace Dvonn_Console
         private Rules ruleBook;
         private PositionTree dvonnTree;
 
+        public readonly string aiEngineName = "DvonnDomina";
+        public readonly string aiEngineVersion = "0.2";
+
         private PieceID playerToMove;
         private PieceID tempPlayerToMove;
 
         private int endgameLimit = 8;
-
+        private int maxDepth = 5;
+        private int maxEndPoints = 100000;
+        private int depthCounter = 0;
 
         public AI()
         {
@@ -25,26 +30,28 @@ namespace Dvonn_Console
 
         }
 
+
         public Move ComputeAiMove(Position currentPosition, PieceID playerToMove)
         {
             Move chosenMove;
-            int depthCounter;
+            depthCounter = 0;
             this.playerToMove = playerToMove;
             tempPlayerToMove = playerToMove;
 
             dvonnTree = new PositionTree(currentPosition);
             aiBoard.ReceivePosition(currentPosition);
-            PreMove premove = ruleBook.ManufacturePreMove(playerToMove);
+            List<Move> legalMoves = ruleBook.FindLegalMoves(playerToMove);
 
-            int maxEndPoints = 160000 / premove.legalMoves.Count;
-
-            if (premove.legalMoves.Count > endgameLimit)
+            if (legalMoves.Count > endgameLimit)
             {
                 var watch_1 = System.Diagnostics.Stopwatch.StartNew();
                 Console.WriteLine();
                 Console.WriteLine("AI: Normal analysis (with alfa/beta pruning) begun.");
-                depthCounter = CreateTree(maxEndPoints);
+                CreateTree(2);
                 PruneAndEvaluate();
+                CreateTree(1);
+                PruneAndEvaluate();
+                CreateTree(1);
                 chosenMove = PerformMiniMax();
                 Console.WriteLine("AI: Normal analysis (with alfa/beta pruning) ended.");
                 watch_1.Stop();
@@ -52,7 +59,6 @@ namespace Dvonn_Console
 
                 Console.WriteLine();
                 Console.WriteLine("Normal analysis time: " + (elapsedMs_1) + " milliseconds");
-                Console.WriteLine("Last generation branched: " + depthCounter);
                 Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
             }
             else
@@ -60,7 +66,7 @@ namespace Dvonn_Console
                 var watch_2 = System.Diagnostics.Stopwatch.StartNew();
                 Console.WriteLine();
                 Console.WriteLine("AI: Endgame analysis begun.");
-                depthCounter = CreateTree(maxEndPoints);
+                CreateTree(maxDepth);
                 EvaluateEndPoints();
                 chosenMove = PerformMiniMax();
                 Console.WriteLine("AI: Endgame analysis ended.");
@@ -69,7 +75,6 @@ namespace Dvonn_Console
 
                 Console.WriteLine();
                 Console.WriteLine("Endgame analysis took: " + elapsedMs_2 + " milliseconds");
-                Console.WriteLine("Last generation branched: " + depthCounter);
                 Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
             }
 
@@ -79,25 +84,22 @@ namespace Dvonn_Console
         }
 
 
-        private int CreateTree(int maxEndPoints)
+        private void CreateTree(int maxDepth)
         {
-            int depthCounter = 0;
-
-            while (true)
-            {
-                int createdNodes = BranchEndpoints(depthCounter);
-                if (createdNodes > maxEndPoints || createdNodes == 0) break;
-                else depthCounter++;
+            for(int i = 0; i < maxDepth; i++) { 
+                bool stopBranching = BranchEndpoints();
+                if (stopBranching) return;
+                
             }
-            return depthCounter;
 
         }
 
 
-        private int BranchEndpoints(int depthCounter)
+        private bool BranchEndpoints()
         {
             int newNodeCounter = 0;
-            List<Node> allLeaves = dvonnTree.GetAllLeaves();
+            
+            List<Node> allLeaves = dvonnTree.GetOuterLeaves();
 
             Console.WriteLine();
             Console.WriteLine("AI: Branching begun at depth " + depthCounter);
@@ -110,17 +112,17 @@ namespace Dvonn_Console
                 if (endPoint == dvonnTree.root) ruleBook.CheckDvonnCollapse(null, false);
                 else ruleBook.CheckDvonnCollapse(endPoint.move, false);
 
-                PreMove premovePlayer = ruleBook.ManufacturePreMove(tempPlayerToMove);
-                PreMove premoveOpponent = ruleBook.ManufacturePreMove(tempPlayerToMove.ToOpposite());
+                List<Move> playerLegalMoves = ruleBook.FindLegalMoves(tempPlayerToMove);
+                List<Move> opponentLegalMoves = ruleBook.FindLegalMoves(tempPlayerToMove.ToOpposite());
 
                 //Check if neither players have any legal moves, if yes, this endpoint doesn't branch. 
-                if (ruleBook.GameEndCondition(premovePlayer, premoveOpponent) == true)
+                if (playerLegalMoves.Count == 0 && opponentLegalMoves.Count == 0)
                 {
                     continue;
                 }
 
                 //Check if moving player has no legal moves, if yes, a pass move is inserted in the tree
-                if (ruleBook.PassCondition(premovePlayer) == true)
+                if (playerLegalMoves.Count == 0)
                 {
                     Move passMove = new Move(tempPlayerToMove);
                     dvonnTree.InsertChild(new Node(passMove, endPoint.resultingPosition), endPoint);
@@ -128,10 +130,10 @@ namespace Dvonn_Console
                     continue;
                 }
 
-                foreach (Move move in premovePlayer.legalMoves)
+                foreach (Move move in playerLegalMoves)
                 {
                     Position newPosition = new Position();
-                    newPosition.Copy(endPoint.resultingPosition); //is this necessary?
+                    newPosition.Copy(endPoint.resultingPosition); 
                     newPosition.MakeMove(move);
 
                     dvonnTree.InsertChild(new Node(move, newPosition), endPoint);
@@ -143,8 +145,9 @@ namespace Dvonn_Console
             Console.WriteLine("AI: added total number of nodes: " + newNodeCounter);
 
             tempPlayerToMove = tempPlayerToMove.ToOpposite();
+            depthCounter++;
 
-            return newNodeCounter;
+            return newNodeCounter == 0 || newNodeCounter > maxEndPoints;
 
         }
 
@@ -215,11 +218,11 @@ namespace Dvonn_Console
             PieceID movingColor = move.responsibleColor;
             PieceID nextPlayer = move.responsibleColor.ToOpposite();
 
-            PreMove nextPlayerOptions = ruleBook.ManufacturePreMove(nextPlayer);
-            PreMove samePlayerOptions = ruleBook.ManufacturePreMove(movingColor);
+            List<Move> nextPlayerLegalMoves = ruleBook.FindLegalMoves(nextPlayer);
+            List<Move> samePlayerLegalMoves = ruleBook.FindLegalMoves(movingColor);
 
             //Check whether move ends game. If true, return appropriate value 
-            if (ruleBook.GameEndCondition(nextPlayerOptions, samePlayerOptions) == true)
+            if (nextPlayerLegalMoves.Count == 0 && samePlayerLegalMoves.Count == 0)
             {
                 doAlgorithm = false;
                 int whiteScore = ruleBook.GetScore(PieceID.White);
@@ -244,14 +247,14 @@ namespace Dvonn_Console
                 //thisEval += controlledStacks.Count * 100;
 
                 //bonus for legal moves
-                thisEval += nextPlayerOptions.legalMoves.Count * 200;
+                thisEval += nextPlayerLegalMoves.Count * 200;
 
                 //bonus for single stacks
                 List<int> singles = aiBoard.GetSingles(controlledStacks);
                 thisEval += singles.Count * 250;
 
                 //bonus for singles that land on dvonn
-                List<int> dvonnLanders = aiBoard.DvonnLanders(nextPlayerOptions);
+                List<int> dvonnLanders = aiBoard.DvonnLanders(nextPlayerLegalMoves);
                 foreach (int single in singles)
                 {
                     if (dvonnLanders.Contains(single)) thisEval += 800;
@@ -272,45 +275,22 @@ namespace Dvonn_Console
                 List<int> dvonnLandersLanders = new List<int>();
                 foreach (int lander in dvonnLanders)
                 {
-                    List<int> landerLanders = aiBoard.GetLanders(lander, nextPlayerOptions);
+                    List<int> landerLanders = aiBoard.GetLanders(lander, nextPlayerLegalMoves);
                     dvonnLandersLanders.AddRange(landerLanders);
                     thisEval += landerLanders.Count * 100;
                 }
 
                 //bonus for dvonn dominance (per dvonn tower)
                 List<int> dvonnTowers = aiBoard.GetDvonnStacks();
-                int nextPlayerControlledDvonnTowers = 0;
-
                 foreach (int tower in dvonnTowers)
                 {
-                    List<int> nextPlayerLanders = aiBoard.GetLanders(tower, nextPlayerOptions);
-                    List<int> samePlayerLanders = aiBoard.GetLanders(tower, samePlayerOptions);
-                    List<int> nextPlayerLostLanders = new List<int>();
-                    List<int> samePlayerLostLanders = new List<int>();
+                    List<int> nextPlayerLanders = aiBoard.GetLanders(tower, nextPlayerLegalMoves);
+                    List<int> samePlayerLanders = aiBoard.GetLanders(tower, samePlayerLegalMoves);
 
-                    foreach (int nextLander in nextPlayerLanders)
-                    {
-                        List<int> nextPlayerLanderLanders = aiBoard.GetLanders(nextLander, nextPlayerOptions);
-                        List<int> samePlayerLanderLanders = aiBoard.GetLanders(nextLander, samePlayerOptions);
-
-                        if (samePlayerLanderLanders.Count > nextPlayerLanderLanders.Count) nextPlayerLostLanders.Add(nextLander);
-
-                    }
-                    nextPlayerLanders.RemoveAll(lander => nextPlayerLostLanders.Contains(lander));
-
-
-                    foreach (int sameLander in samePlayerLanders)
-                    {
-                        List<int> samePlayerLanderLanders = aiBoard.GetLanders(sameLander, samePlayerOptions);
-                        List<int> nextPlayerLanderLanders = aiBoard.GetLanders(sameLander, nextPlayerOptions);
-                        if (nextPlayerLanderLanders.Count > samePlayerLanderLanders.Count) samePlayerLostLanders.Add(sameLander);
-                    }
-                    samePlayerLanders.RemoveAll(lander => samePlayerLostLanders.Contains(lander));
-
-                    if (nextPlayerLanders.Count > samePlayerLanders.Count) nextPlayerControlledDvonnTowers++;
+                    if (nextPlayerLanders.Count > samePlayerLanders.Count) thisEval += 2000;
+                    else if (nextPlayerLanders.Count == samePlayerLanders.Count) thisEval += 1000;
 
                 }
-                thisEval += nextPlayerControlledDvonnTowers * 2000;
 
                 //TODO: Dead towers could have a bearing on the evaluation....
                 //Board.DeadTowerAnalysis deadTowerAnalysis = aiBoard.ManufactureDeadTowerAnalysis(ruleBook, nextPlayer);
@@ -428,8 +408,10 @@ namespace Dvonn_Console
         {
             aiBoard.ReceivePosition(beforePosition);
             ruleBook.CheckDvonnCollapse(null, false);
-            PreMove beforeOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color before considered move has been made
-            int beforeDvonnLanders = aiBoard.DvonnLanders(beforeOptions).Count;
+            List<Move> beforeLegalMoves = ruleBook.FindLegalMoves(playerToMove);
+            int beforeDvonnLanders = aiBoard.DvonnLanders(beforeLegalMoves).Count;
+
+            
 
             foreach (Move move in moveList)
             {
@@ -438,9 +420,9 @@ namespace Dvonn_Console
                 afterPosition.MakeMove(move);
                 aiBoard.ReceivePosition(afterPosition);
                 ruleBook.CheckDvonnCollapse(move, false);
-                PreMove afterOptions = ruleBook.ManufacturePreMove(playerToMove); //the options for moving color after considered move has been made
+                List<Move> afterLegalMoves = ruleBook.FindLegalMoves(playerToMove);
 
-                if (aiBoard.DvonnLanders(afterOptions).Count > beforeDvonnLanders) move.secondaryEvaluation += 500;
+                if (aiBoard.DvonnLanders(afterLegalMoves).Count > beforeDvonnLanders) move.secondaryEvaluation += 500;
                 if (afterPosition.stacks[move.target].Length == 2) move.secondaryEvaluation += 400;
                 if (beforePosition.TopPiece(move.target) != playerToMove.ToChar()) move.secondaryEvaluation += 300;
 

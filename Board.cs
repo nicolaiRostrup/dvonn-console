@@ -143,7 +143,7 @@ namespace Dvonn_Console
             return result;
         }
 
-        PieceID GetPieceType(char c)
+        private PieceID GetPieceType(char c)
         {
             if (c == 'W') return PieceID.White;
             if (c == 'B') return PieceID.Black;
@@ -152,7 +152,7 @@ namespace Dvonn_Console
             throw new ArgumentException("Unexpected char received: " + c);
         }
 
-        char GetChar(PieceID pieceColor)
+        private char GetChar(PieceID pieceColor)
         {
             if (pieceColor == PieceID.Black) return 'B';
             if (pieceColor == PieceID.White) return 'W';
@@ -404,11 +404,11 @@ namespace Dvonn_Console
 
         }
 
-        public List<int> GetLanders(int targetID, PreMove premove)
+        public List<int> GetLanders(int targetID, List<Move> legalMoves)
         {
             List<int> landers = new List<int>();
 
-            foreach (Move move in premove.legalMoves)
+            foreach (Move move in legalMoves)
             {
                 if (move.target == targetID && !landers.Contains(move.source))
                 {
@@ -506,7 +506,7 @@ namespace Dvonn_Console
 
         }
 
-        public List<int> DvonnLanders(PreMove premove)
+        public List<int> DvonnLanders(List<Move> legalMoves)
         {
             List<int> dvonnStacks = GetDvonnStacks();
 
@@ -514,7 +514,7 @@ namespace Dvonn_Console
 
             foreach (int fieldID in dvonnStacks)
             {
-                List<int> landers = GetLanders(fieldID, premove);
+                List<int> landers = GetLanders(fieldID, legalMoves);
                 foreach (int landerID in landers)
                 {
                     //this will possibly result in several same landerID's in dvonnLanders
@@ -526,13 +526,13 @@ namespace Dvonn_Console
             return dvonnLanders;
         }
 
-        public bool isDvonnLander(int fieldID, PreMove premove)
+        public bool isDvonnLander(int fieldID, List<Move> legalMoves)
         {
             List<int> dvonnStacks = GetDvonnStacks();
 
             foreach (int dvonnField in dvonnStacks)
             {
-                List<int> dvonnLanders = GetLanders(dvonnField, premove);
+                List<int> dvonnLanders = GetLanders(dvonnField, legalMoves);
                 if (dvonnLanders.Contains(fieldID)) return true;
 
             }

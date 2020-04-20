@@ -40,6 +40,16 @@ namespace Dvonn_Console
 
         }
 
+        public static PieceID ToPieceID(this string str)
+        {
+            if (str == "W") return PieceID.White;
+            if (str == "B") return PieceID.Black;
+            if (str == "D") return PieceID.Dvonn;
+
+            throw new ArgumentException("Unexpected char received: " + str.ToString());
+
+        }
+
     }
 
     

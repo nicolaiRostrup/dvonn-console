@@ -18,8 +18,8 @@ namespace Dvonn_Console
             Console.WriteLine("Original game design by Kris Burm, 2001");
             Console.WriteLine("*****************************************************");
             Console.WriteLine();
-            Console.WriteLine("Version 5.0, computer optionally plays with AI.");
-            Console.WriteLine("Human player is always white. White always begins.");
+            Console.WriteLine("Version 6.0, computer plays with AI engine Dvonn Domina.");
+            Console.WriteLine("Human color is optional. White always begins.");
 
             WaitForUser();
         }
@@ -86,17 +86,15 @@ namespace Dvonn_Console
         }
 
 
-        public void GameEndText(int whiteScore, int blackScore)
+        public void GameEndText(int whiteScore, int blackScore, Game finishedGame)
         {
-            //int[] gameScore = Calculate.Score();
-
             if (whiteScore > blackScore)
             {
                 Console.WriteLine();
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
                 Console.WriteLine("The game is over");
-                Console.WriteLine("Human player has won");
+                Console.WriteLine("White player ( " + finishedGame.whitePlayerName + " ) has won");
                 Console.WriteLine("The end score was: ");
                 Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();
@@ -108,7 +106,7 @@ namespace Dvonn_Console
                 Console.WriteLine();
                 Console.WriteLine("*****************************************************");
                 Console.WriteLine("The game is over");
-                Console.WriteLine("Computer has won");
+                Console.WriteLine("Black player ( " + finishedGame.blackPlayerName + " ) has won");
                 Console.WriteLine("The end score was: ");
                 Console.WriteLine("White: {0} \t Black: {1}", whiteScore, blackScore);
                 Console.WriteLine();

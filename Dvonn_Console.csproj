@@ -52,7 +52,6 @@
     <Compile Include="Piece.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="PositionTree.cs" />
-    <Compile Include="PreMove.cs" />
     <Compile Include="Rules.cs" />
     <Compile Include="StackInspector.cs" />
     <Compile Include="TreeCrawler.cs" />
