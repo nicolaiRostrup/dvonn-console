@@ -25,7 +25,7 @@ namespace Dvonn_Console
 
             List<Piece> chosenPieceList = thisBoard.entireBoard[fieldID].stack;
 
-            List<int> legalTargets = ruleBook.GetLegalTargets(fieldID);
+            List<int> legalTargets = ruleBook.FindLegalTargets(fieldID);
 
 
             if (chosenPieceList.Count == 0)

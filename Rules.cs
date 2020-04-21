@@ -15,7 +15,7 @@ namespace Dvonn_Console
             this.dvonnBoard = dvonnBoard;
         }
 
-        public List<int> GetLegalTargets(int fieldID)
+        public List<int> FindLegalTargets(int fieldID)
         {
             List<int> foundLegalTargets = new List<int>();
 
@@ -62,7 +62,7 @@ namespace Dvonn_Console
             return legalMoves;
         }
 
-        private List<int> FindNotEmptyStacks()
+        public List<int> FindNotEmptyStacks()
         {
             List<int> principalTargets = new List<int>();
 
@@ -92,7 +92,7 @@ namespace Dvonn_Console
             return legalSources;
         }
 
-        public List<int> GetTrueLegalSources(List<Move> moveList)
+        public List<int> ExtractSources(List<Move> moveList)
         {
             List<int> trueLegalSources = new List<int>();
 
@@ -106,7 +106,7 @@ namespace Dvonn_Console
             return trueLegalSources;
         }
 
-        public List<int> GetTrueLegalTargets(List<Move> moveList)
+        public List<int> ExtractTargets(List<Move> moveList)
         {
             List<int> trueLegalTargets = new List<int>();
 

@@ -125,6 +125,7 @@ namespace Dvonn_Console
                     case "1": // Enter move ...
 
                         Move chosenMove = GetUserMoveInput(playerLegalMoves);
+                        //Move chosenMove = PickRandomMove(playerLegalMoves);
 
                         if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
                         {
@@ -190,6 +191,8 @@ namespace Dvonn_Console
                         //Check if human has any legal moves
                         if (playerLegalMoves.Count == 0)
                         {
+                            dvonnGame.gameMoveList.Add(new Move(humanColor));
+
                             List<Move> newMoves = RepeatedRandomMove(aiLegalMoves);
                             if (newMoves == null)
                             {
@@ -399,8 +402,8 @@ namespace Dvonn_Console
 
                 if (!playerLegalMoves.Contains(chosenMove))
                 {
-                    List<int> trueLegalSources = ruleBook.GetTrueLegalSources(playerLegalMoves);
-                    List<int> trueLegalTargets = ruleBook.GetTrueLegalTargets(playerLegalMoves);
+                    List<int> trueLegalSources = ruleBook.ExtractSources(playerLegalMoves);
+                    List<int> trueLegalTargets = ruleBook.ExtractTargets(playerLegalMoves);
                     bool sourceInvalid = !trueLegalSources.Contains(chosenMove.source);
                     bool targetInvalid = !trueLegalTargets.Contains(chosenMove.target);
 

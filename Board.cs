@@ -331,7 +331,7 @@ namespace Dvonn_Console
         }
 
 
-        private List<int> DeadTowers(Rules ruleBook)
+        public List<int> DeadTowers(Rules ruleBook)
         {
             List<int> deadTowers = new List<int>();
 
@@ -339,7 +339,7 @@ namespace Dvonn_Console
             {
                 if (entireBoard[i].stack.Count < 3) continue;
 
-                if (ruleBook.GetLegalTargets(i).Count == 0) deadTowers.Add(i);
+                if (ruleBook.FindLegalTargets(i).Count == 0) deadTowers.Add(i);
 
             }
             return deadTowers;
