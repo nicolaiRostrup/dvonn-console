@@ -124,8 +124,8 @@ namespace Dvonn_Console
                 {
                     case "1": // Enter move ...
 
-                        Move chosenMove = GetUserMoveInput(playerLegalMoves);
-                        //Move chosenMove = PickRandomMove(playerLegalMoves);
+                        //Move chosenMove = GetUserMoveInput(playerLegalMoves);
+                        Move chosenMove = PickRandomMove(playerLegalMoves);
 
                         if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
                         {
@@ -159,7 +159,7 @@ namespace Dvonn_Console
                         //Check if computer has any legal moves
                         if (aiLegalMoves.Count == 0)
                         {
-                            dvonnGame.gameMoveList.Add(new Move(aiColor));
+                            dvonnGame.gameMoveList.Add(new Move(aiColor, true));
                             Console.WriteLine();
                             Console.WriteLine("Computer has no legal moves. It's your turn again.");
                             break;
@@ -191,7 +191,7 @@ namespace Dvonn_Console
                         //Check if human has any legal moves
                         if (playerLegalMoves.Count == 0)
                         {
-                            dvonnGame.gameMoveList.Add(new Move(humanColor));
+                            dvonnGame.gameMoveList.Add(new Move(humanColor, true));
 
                             List<Move> newMoves = RepeatedRandomMove(aiLegalMoves);
                             if (newMoves == null)
@@ -336,7 +336,7 @@ namespace Dvonn_Console
 
                 if (currentAiLegalMoves.Count == 0 && opponentLegalMoves.Count > 0)
                 {
-                    dvonnGame.gameMoveList.Add(new Move(playerToMove));
+                    dvonnGame.gameMoveList.Add(new Move(playerToMove, true));
                 }
 
                 playerToMove = playerToMove.ToOpposite();
@@ -466,7 +466,7 @@ namespace Dvonn_Console
                 else if (aiLegalMoves.Count == 0) break;
 
                 //Add pass move for human player:
-                dvonnGame.gameMoveList.Add(new Move(humanColor));
+                dvonnGame.gameMoveList.Add(new Move(humanColor, true));
 
             } while (playerLegalMoves.Count == 0);
 

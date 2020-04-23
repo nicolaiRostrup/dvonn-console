@@ -151,17 +151,24 @@ namespace Dvonn_Console
                 childCounter++;
 
             }
-
             GoTowardsRoot();
         }
 
         private int EvaluatePosition(int i)
         {
-            Move thisMove = currentNode.children[i].move;
-            Position thisPosition = currentNode.resultingPosition;
-            int thisEval = aiAgent.EvaluatePosition(thisMove, thisPosition);
-            currentNode.children[i].move.evaluation = thisEval;
-            evaluatedPositions++;
+            int thisEval;
+            Node endPoint = currentNode.children[i];
+
+            if (endPoint.move.isGameOverMove)
+            {
+                thisEval = endPoint.move.evaluation;
+            }
+            else
+            {
+                thisEval = aiAgent.EvaluatePosition(endPoint.move, endPoint.resultingPosition);
+                endPoint.move.evaluation = thisEval;
+                evaluatedPositions++;
+            }
 
             //for debug:
             if (evaluationSpanInitiated == false)
@@ -277,7 +284,9 @@ namespace Dvonn_Console
 
         private bool IsSingleChild(Node node)
         {
-            return node.parent.children.Count == 1;
+            if (node == tree.root) return true;
+            else return node.parent.children.Count == 1;
+
         }
 
     }

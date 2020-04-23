@@ -55,6 +55,19 @@ namespace Dvonn_Console
             }
         }
 
+        public int GetScore(PieceID color)
+        {
+            int score = 0;
+            for (int i = 0; i < 49; i++)
+            {
+                int stackCount = stacks[i].Length;
+                if (stackCount == 0) continue;
+                if (TopPiece(i) == color.ToChar()) score += stackCount;
+                
+            }
+            return score;
+        }
+
         
 
         //position notation 2:

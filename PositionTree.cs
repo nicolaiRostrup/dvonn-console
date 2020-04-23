@@ -14,6 +14,7 @@ namespace Dvonn_Console
         //these class variables are used for recursive algorithms:
         private List<GenerationAccount> generationAccounts = new List<GenerationAccount>();
         private List<Node> allLeaves = new List<Node>();
+        private List<Node> stubs = new List<Node>();
         private int depthCounter = 0;
 
         //for debug:
@@ -37,7 +38,7 @@ namespace Dvonn_Console
         {
             parent.children.Add(childNode);
             childNode.parent = parent;
-            childNode.depth = parent.depth +1;
+            childNode.depth = parent.depth + 1;
 
         }
 
@@ -49,13 +50,15 @@ namespace Dvonn_Console
             {
                 GenerationAccount newGeneration = new GenerationAccount(node.depth);
                 newGeneration.depthNodesCount++;
-                newGeneration.childCount += node.children.Count;
+                if (node.children.Count == 0) newGeneration.firstChildStubCount++;
+                else newGeneration.childCount += node.children.Count;
                 generationAccounts.Add(newGeneration);
             }
             else
             {
                 thisGeneration.depthNodesCount++;
-                thisGeneration.childCount += node.children.Count;
+                if (node.children.Count == 0) thisGeneration.stubCount++;
+                else thisGeneration.childCount += node.children.Count;
 
             }
 
@@ -100,7 +103,7 @@ namespace Dvonn_Console
         private int GetTotalNodeCount()
         {
             int totalNodeCounter = 1; //= root
-            foreach(GenerationAccount account in generationAccounts)
+            foreach (GenerationAccount account in generationAccounts)
             {
                 totalNodeCounter += account.childCount;
 
@@ -134,7 +137,7 @@ namespace Dvonn_Console
                     GetLeaves(child);
                 }
             }
-            
+
         }
 
         public int GetAllLeavesCount()
@@ -173,9 +176,74 @@ namespace Dvonn_Console
             List<Node> parents = new List<Node>();
             foreach (Node node in theseNodes)
             {
-                if ( !parents.Contains(node.parent)) parents.Add(node.parent);
+                if (!parents.Contains(node.parent)) parents.Add(node.parent);
             }
             return parents;
+        }
+
+        public void RemoveAllStubs()
+        {
+            int depthReach = GetDepthReach();
+            int iterationCounter = 0;
+            int stubDeletionCounter = 0;
+            do
+            {
+                stubs.Clear();
+                FindStubs(root, depthReach);
+                stubDeletionCounter += DeleteStubs();
+                iterationCounter++;
+            }
+            while (stubs.Count > 0);
+            
+            Console.WriteLine();
+            Console.WriteLine("AI: Deleted " + stubDeletionCounter + " stubs in " + iterationCounter + " iterations");
+
+        }
+
+        public void FindStubs(Node node, int depthReach)
+        {
+
+            if (node.children.Count == 0 && node.depth < depthReach) stubs.Add(node);
+            else
+            {
+                foreach (Node child in node.children)
+                {
+                    FindStubs(child, depthReach);
+                }
+            }
+
+        }
+
+        public int DeleteStubs()
+        {
+            int stubCounter = 0;
+            foreach (Node node in stubs)
+            {
+                node.parent.children.Remove(node);
+                stubCounter++;
+            }
+            return stubCounter;
+        }
+
+        public void RefreshAlphaBeta()
+        {
+            RefreshAlphaBetaValues(root);
+
+        }
+
+        private void RefreshAlphaBetaValues(Node node)
+        {
+            node.alpha = int.MinValue;
+            node.beta = int.MaxValue;
+
+            if (node.children.Count > 0)
+            {
+                foreach (Node child in node.children)
+                {
+                    RefreshAlphaBetaValues(child);
+                }
+            }
+
         }
 
         private class GenerationAccount
@@ -183,6 +251,8 @@ namespace Dvonn_Console
             public int depth;
             public int depthNodesCount = 0;
             public int childCount = 0; //should equal depthNodesCount in next generation.
+            public int stubCount = 0;
+            public int firstChildStubCount = 0;
 
             public GenerationAccount(int depth)
             {
@@ -213,25 +283,25 @@ namespace Dvonn_Console
             }
             sb.AppendLine();
 
-            if (allLeaves.Count <= 1)
-            {
-                sb.AppendLine("The tree currently has no leaves");
+            //if (allLeaves.Count <= 1)
+            //{
+            //    sb.AppendLine("The tree currently has no leaves");
 
-            }
-            else
-            {
-                int leaveCounter = 1;
-                foreach (Node leave in allLeaves)
-                {
-                    sb.AppendLine("Leave " + leaveCounter + ": has test evaluation:  " + leave.testValue + " and parent in generation: " + leave.parent.depth);
-                    leaveCounter++;
-                }
-            }
+            //}
+            //else
+            //{
+            //    int leaveCounter = 1;
+            //    foreach (Node leave in allLeaves)
+            //    {
+            //        sb.AppendLine("Leave " + leaveCounter + ": has test evaluation:  " + leave.testValue + " and parent in generation: " + leave.parent.depth);
+            //        leaveCounter++;
+            //    }
+            //}
 
             return sb.ToString();
 
         }
 
-        
+
     }
 }

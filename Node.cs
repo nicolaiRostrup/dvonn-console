@@ -33,6 +33,13 @@ namespace Dvonn_Console
 
         }
 
+        //For game over node
+        public Node(Move move)
+        {
+            this.move = move;
+
+        }
+
         //For test purposes
         public Node()
         {
