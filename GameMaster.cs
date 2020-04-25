@@ -11,16 +11,12 @@ namespace Dvonn_Console
         private Writer typeWriter = new Writer();
         private Game dvonnGame;
         private Board dvonnBoard;
-        private Rules ruleBook;
         private StackInspector stackInspector;
         private AI aiAgent;
 
         public GameMaster()
         {
             dvonnBoard = new Board();
-            dvonnBoard.InstantiateFields();
-            dvonnBoard.CalculatePrincipalMoves();
-            ruleBook = new Rules(dvonnBoard);
             stackInspector = new StackInspector(dvonnBoard);
             aiAgent = new AI();
 
@@ -104,13 +100,13 @@ namespace Dvonn_Console
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(aiMove, aiColor);
 
-                playerLegalMoves = ruleBook.FindLegalMoves(PieceID.Black);
-                aiLegalMoves = ruleBook.FindLegalMoves(PieceID.White);
+                playerLegalMoves = dvonnBoard.FindLegalMoves(PieceID.Black);
+                aiLegalMoves = dvonnBoard.FindLegalMoves(PieceID.White);
             }
             else
             {
-                playerLegalMoves = ruleBook.FindLegalMoves(PieceID.White);
-                aiLegalMoves = ruleBook.FindLegalMoves(PieceID.Black);
+                playerLegalMoves = dvonnBoard.FindLegalMoves(PieceID.White);
+                aiLegalMoves = dvonnBoard.FindLegalMoves(PieceID.Black);
             }
 
 
@@ -142,11 +138,11 @@ namespace Dvonn_Console
 
                         }
                         //Do a check for dvonn collapse, and if true, execute and make comment.
-                        ruleBook.CheckDvonnCollapse(chosenMove, true);
+                        dvonnBoard.CheckDvonnCollapse(chosenMove, true);
 
                         //After White's move both players' options need to be analyzed.
-                        playerLegalMoves = ruleBook.FindLegalMoves(humanColor);
-                        aiLegalMoves = ruleBook.FindLegalMoves(aiColor);
+                        playerLegalMoves = dvonnBoard.FindLegalMoves(humanColor);
+                        aiLegalMoves = dvonnBoard.FindLegalMoves(aiColor);
 
                         //Check whether game has ended. 
                         if (aiLegalMoves.Count == 0 && playerLegalMoves.Count == 0)
@@ -174,11 +170,11 @@ namespace Dvonn_Console
                         dvonnGame.gameMoveList.Add(aiMove);
                         dvonnBoard.VisualizeBoard();
                         typeWriter.MoveComment(aiMove, aiColor);
-                        ruleBook.CheckDvonnCollapse(aiMove, true);
+                        dvonnBoard.CheckDvonnCollapse(aiMove, true);
 
                         //After ai engine move both players' options need to be analyzed.
-                        playerLegalMoves = ruleBook.FindLegalMoves(humanColor);
-                        aiLegalMoves = ruleBook.FindLegalMoves(aiColor);
+                        playerLegalMoves = dvonnBoard.FindLegalMoves(humanColor);
+                        aiLegalMoves = dvonnBoard.FindLegalMoves(aiColor);
 
                         //Again, this time after blacks move, check whether game has ended.
                         if (aiLegalMoves.Count == 0 && playerLegalMoves.Count == 0)
@@ -232,7 +228,7 @@ namespace Dvonn_Console
 
                     case "3":
                         Console.WriteLine("If game was to end now, the score would be: ");
-                        Console.WriteLine("White: {0} \t Black: {1}", ruleBook.GetScore(PieceID.White), ruleBook.GetScore(PieceID.Black));
+                        Console.WriteLine("White: {0} \t Black: {1}", dvonnBoard.GetScore(PieceID.White), dvonnBoard.GetScore(PieceID.Black));
                         Console.WriteLine();
                         break;
 
@@ -270,9 +266,9 @@ namespace Dvonn_Console
 
 
                         dvonnBoard.ReceivePosition(partialDvonnGame);
-                        playerLegalMoves = ruleBook.FindLegalMoves(PieceID.White);
+                        playerLegalMoves = dvonnBoard.FindLegalMoves(PieceID.White);
                         dvonnBoard.VisualizeBoard();
-                        ruleBook.CheckDvonnCollapse(null, false);
+                        dvonnBoard.CheckDvonnCollapse(null, false);
                         break;
 
                     case "8": //Auto finish
@@ -291,8 +287,8 @@ namespace Dvonn_Console
 
         private void DoEndOFGameRoutine()
         {
-            int whiteScore = ruleBook.GetScore(PieceID.White);
-            int blackScore = ruleBook.GetScore(PieceID.Black);
+            int whiteScore = dvonnBoard.GetScore(PieceID.White);
+            int blackScore = dvonnBoard.GetScore(PieceID.Black);
             dvonnGame.timeEnded = DateTime.Now;
             dvonnGame.gameResultWhite = whiteScore;
             dvonnGame.gameResultBlack = blackScore;
@@ -315,15 +311,15 @@ namespace Dvonn_Console
 
             do
             {
-                currentAiLegalMoves = ruleBook.FindLegalMoves(playerToMove);
+                currentAiLegalMoves = dvonnBoard.FindLegalMoves(playerToMove);
                 if (currentAiLegalMoves.Count > 0)
                 {
                     Move randomMove = PickRandomMove(currentAiLegalMoves);
                     dvonnBoard.MakeMove(randomMove);
                     dvonnGame.gameMoveList.Add(randomMove);
-                    ruleBook.CheckDvonnCollapse(randomMove, false);
+                    dvonnBoard.CheckDvonnCollapse(randomMove, false);
                 }
-                opponentLegalMoves = ruleBook.FindLegalMoves(playerToMove.ToOpposite());
+                opponentLegalMoves = dvonnBoard.FindLegalMoves(playerToMove.ToOpposite());
 
                 if (currentAiLegalMoves.Count == 0 && opponentLegalMoves.Count > 0)
                 {
@@ -393,8 +389,8 @@ namespace Dvonn_Console
 
                 if (!playerLegalMoves.Contains(chosenMove))
                 {
-                    List<int> trueLegalSources = ruleBook.ExtractSources(playerLegalMoves);
-                    List<int> trueLegalTargets = ruleBook.ExtractTargets(playerLegalMoves);
+                    List<int> trueLegalSources = dvonnBoard.ExtractSources(playerLegalMoves);
+                    List<int> trueLegalTargets = dvonnBoard.ExtractTargets(playerLegalMoves);
                     bool sourceInvalid = !trueLegalSources.Contains(chosenMove.source);
                     bool targetInvalid = !trueLegalTargets.Contains(chosenMove.target);
 
@@ -449,10 +445,10 @@ namespace Dvonn_Console
                 dvonnGame.gameMoveList.Add(randomMove);
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(randomMove, aiColor);
-                ruleBook.CheckDvonnCollapse(randomMove, true);
+                dvonnBoard.CheckDvonnCollapse(randomMove, true);
 
-                aiLegalMoves = ruleBook.FindLegalMoves(aiColor);
-                playerLegalMoves = ruleBook.FindLegalMoves(humanColor);
+                aiLegalMoves = dvonnBoard.FindLegalMoves(aiColor);
+                playerLegalMoves = dvonnBoard.FindLegalMoves(humanColor);
 
                 if (aiLegalMoves.Count == 0 && playerLegalMoves.Count == 0) return null;
                 else if (aiLegalMoves.Count == 0) break;

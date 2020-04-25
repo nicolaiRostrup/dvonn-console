@@ -45,6 +45,9 @@
   <ItemGroup>
     <Compile Include="AI.cs" />
     <Compile Include="Board.cs" />
+    <Compile Include="BoardProperties.cs" />
+    <Compile Include="Enums.cs" />
+    <Compile Include="Evaluator.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Game.cs" />
     <Compile Include="Move.cs" />
@@ -52,7 +55,6 @@
     <Compile Include="Piece.cs" />
     <Compile Include="Position.cs" />
     <Compile Include="PositionTree.cs" />
-    <Compile Include="Rules.cs" />
     <Compile Include="StackInspector.cs" />
     <Compile Include="TreeCrawler.cs" />
     <Compile Include="Writer.cs" />

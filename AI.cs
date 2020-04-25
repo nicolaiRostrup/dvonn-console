@@ -5,11 +5,12 @@ using System.Net;
 
 namespace Dvonn_Console
 {
+
     class AI
     {
-        private Board aiBoard;
-        private Rules ruleBook;
-        private PositionTree dvonnTree;
+        private Board aiBoard = new Board();
+        private PositionTree dvonnTree = new PositionTree();
+        private Evaluator evaluator = new Evaluator();
         private GamePhase currentGamePhase;
 
         public readonly string aiEngineName = "DvonnDomina";
@@ -21,46 +22,30 @@ namespace Dvonn_Console
         //for debug:
         private int depthCounter = 0;
 
-
-
-        public AI()
-        {
-            aiBoard = new Board();
-            aiBoard.InstantiateFields();
-            aiBoard.CalculatePrincipalMoves();
-            ruleBook = new Rules(aiBoard);
-
-        }
-
-        public enum GamePhase
-        {
-            EarlyGame, Apex, PostApex, EndGame
-        }
-
+      
 
         public Move ComputeAiMove(Position currentPosition, PieceID playerToMove)
         {
-            Move chosenMove;
+            Move chosenMove = new Move();
             depthCounter = 0;
             this.playerToMove = playerToMove;
             tempPlayerToMove = playerToMove;
             dvonnTree = new PositionTree(currentPosition);
             aiBoard.ReceivePosition(currentPosition);
-            int legalMoveCount = ruleBook.FindLegalMoves(playerToMove).Count;
-            int emptyStackCount = 49 - ruleBook.FindNotEmptyStacks().Count;
+            int legalMoveCount = aiBoard.FindLegalMoves(playerToMove).Count;
+            int emptyStackCount = 49 - aiBoard.FindNotEmptyStacks().Count;
             currentGamePhase = DetermineGamePhase(emptyStackCount);
 
             Console.WriteLine();
             Console.WriteLine("AI: Legal moves count: " + legalMoveCount);
             Console.WriteLine("AI: Empty stacks count: " + emptyStackCount);
             Console.WriteLine("AI: Game Phase: " + currentGamePhase);
+            Console.WriteLine();
+            Console.WriteLine("AI: Computation begun.");
+            var watch_1 = System.Diagnostics.Stopwatch.StartNew();
 
             if (currentGamePhase == GamePhase.EarlyGame)
             {
-                var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                Console.WriteLine();
-                Console.WriteLine("AI: Two pass branching begun.");
-
                 CreateTree(3, 8000);
                 PruneAndEvaluate();
                 dvonnTree.RefreshAlphaBeta();
@@ -70,23 +55,11 @@ namespace Dvonn_Console
                     PruneAndEvaluate();
                 }
                 chosenMove = PerformMiniMax();
-
-                watch_1.Stop();
-                var elapsedMs_1 = watch_1.ElapsedMilliseconds;
-                Console.WriteLine("AI: Two pass branching ended.");
-                Console.WriteLine("Two pass branching and evaluation took: " + elapsedMs_1 + " milliseconds");
-                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-                WaitForUser();
-                return chosenMove;
+                
             }
 
             if (currentGamePhase == GamePhase.Apex)
             {
-
-                var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                Console.WriteLine();
-                Console.WriteLine("AI: Two pass branching begun.");
-
                 CreateTree(3, 7000);
                 PruneAndEvaluate();
                 dvonnTree.RefreshAlphaBeta();
@@ -96,22 +69,11 @@ namespace Dvonn_Console
                     PruneAndEvaluate();
                 }
                 chosenMove = PerformMiniMax();
-
-                watch_1.Stop();
-                var elapsedMs_1 = watch_1.ElapsedMilliseconds;
-                Console.WriteLine("AI: Two pass branching  ended.");
-                Console.WriteLine("Two pass branching and evaluation took: " + elapsedMs_1 + " milliseconds");
-                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-                WaitForUser();
-                return chosenMove;
+                
             }
 
             if (currentGamePhase == GamePhase.PostApex)
             {
-                var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                Console.WriteLine();
-                Console.WriteLine("AI: Chain branching with hard pruning begun.");
-
                 int allLeavesCount;
                 do
                 {
@@ -128,41 +90,27 @@ namespace Dvonn_Console
                 dvonnTree.RemoveAllStubs();
                 CreateTree(2, 3500);
                 PruneAndEvaluate();
-
                 chosenMove = PerformMiniMax();
-
-                watch_1.Stop();
-                var elapsedMs_1 = watch_1.ElapsedMilliseconds;
-                Console.WriteLine("AI: Chain branching with hard pruning ended.");
-                Console.WriteLine("Chain branching evaluation took: " + elapsedMs_1 + " milliseconds");
-                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-                WaitForUser();
-                return chosenMove;
+                
             }
 
             if (currentGamePhase == GamePhase.EndGame)
             {
-
-                var watch_1 = System.Diagnostics.Stopwatch.StartNew();
-                Console.WriteLine();
-                Console.WriteLine("AI: End game style branching begun.");
-
                 CreateTree(15, 10000);
                 EvaluateEndPoints();
 
                 chosenMove = PerformMiniMax();
 
-                watch_1.Stop();
-                var elapsedMs_1 = watch_1.ElapsedMilliseconds;
-                Console.WriteLine("AI: End game style branching ended.");
-                Console.WriteLine("End game style branching took: " + elapsedMs_1 + " milliseconds");
-                Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
-                WaitForUser();
-                return chosenMove;
-
             }
 
-            throw new Exception("Unexpected erroneous production of AI move");
+            watch_1.Stop();
+            var elapsedMs_1 = watch_1.ElapsedMilliseconds;
+            Console.WriteLine("AI: Computation ended.");
+            Console.WriteLine("AI: Total computation took: " + elapsedMs_1 + " milliseconds");
+            Console.WriteLine("Outer endpoint depth: " + dvonnTree.GetDepthReach());
+            WaitForUser();
+
+            return chosenMove;
 
         }
 
@@ -192,8 +140,8 @@ namespace Dvonn_Console
             bool gameOver = false;
             List<Node> allLeaves = dvonnTree.GetOuterLeaves();
 
-            Console.WriteLine();
-            Console.WriteLine("AI: Branching begun at depth " + depthCounter);
+            //Console.WriteLine();
+            //Console.WriteLine("AI: Branching begun at depth " + depthCounter);
             //Console.WriteLine("AI: Color to move: " + tempPlayerToMove.ToString());
             //Console.WriteLine("AI: Endpoints found: " + allLeaves.Count);
 
@@ -216,12 +164,14 @@ namespace Dvonn_Console
                     continue;
                 }
 
+                //Checks for dvonn collapse and saves it to endpoint position.
                 aiBoard.ReceivePosition(endPoint.resultingPosition);
-                if (endPoint == dvonnTree.root) ruleBook.CheckDvonnCollapse(null, false);
-                else ruleBook.CheckDvonnCollapse(endPoint.move, false);
+                if (endPoint == dvonnTree.root) aiBoard.CheckDvonnCollapse(null, false);
+                else aiBoard.CheckDvonnCollapse(endPoint.move, false);
+                endPoint.resultingPosition = aiBoard.SendPosition();
 
-                List<Move> playerLegalMoves = ruleBook.FindLegalMoves(tempPlayerToMove);
-                List<Move> opponentLegalMoves = ruleBook.FindLegalMoves(tempPlayerToMove.ToOpposite());
+                List<Move> playerLegalMoves = aiBoard.FindLegalMoves(tempPlayerToMove);
+                List<Move> opponentLegalMoves = aiBoard.FindLegalMoves(tempPlayerToMove.ToOpposite());
 
                 //Check if neither players have any legal moves, if yes, a game over move is created
                 if (playerLegalMoves.Count == 0 && opponentLegalMoves.Count == 0)
@@ -296,8 +246,8 @@ namespace Dvonn_Console
             if (removeBelow)
             {
                 float percentile = ((maximumEvaluation - minimumEvaluation) * (percentage / 100f)) + minimumEvaluation;
-                Console.WriteLine("AI: Percentile set to: " + percentile);
-                Console.WriteLine("AI: Removing below percentile");
+                //Console.WriteLine("AI: Percentile set to: " + percentile);
+                //Console.WriteLine("AI: Removing below percentile");
                 foreach (Node node in allLeaves)
                 {
                     if (node.move.evaluation < percentile)
@@ -311,8 +261,8 @@ namespace Dvonn_Console
             else
             {
                 float percentile = ((maximumEvaluation - minimumEvaluation) * ((100 - percentage) / 100f)) + minimumEvaluation;
-                Console.WriteLine("AI: Percentile set to: " + percentile);
-                Console.WriteLine("AI: Removing above percentile");
+                //Console.WriteLine("AI: Percentile set to: " + percentile);
+                //Console.WriteLine("AI: Removing above percentile");
                 foreach (Node node in allLeaves)
                 {
                     if (node.move.evaluation > percentile)
@@ -323,7 +273,6 @@ namespace Dvonn_Console
                 }
 
             }
-
             int pruneCounter = 0;
             foreach (Node node in badLeaves)
             {
@@ -339,11 +288,10 @@ namespace Dvonn_Console
         //See also: https://en.wikipedia.org/wiki/Alpha%E2%80%93beta_pruning
         public void PruneAndEvaluate()
         {
-            TreeCrawler treeCrawler = new TreeCrawler(dvonnTree, this);
+            TreeCrawler treeCrawler = new TreeCrawler(dvonnTree, currentGamePhase, playerToMove);
             treeCrawler.AlphaBetaPruning();
 
         }
-
 
         public void EvaluateEndPoints()
         {
@@ -360,7 +308,7 @@ namespace Dvonn_Console
             int nodeCounter = 0;
             foreach (Node endPoint in outerLeavesOnly)
             {
-                int thisEval = EvaluatePosition(endPoint);
+                int thisEval = evaluator.EvaluatePosition(endPoint, currentGamePhase, playerToMove);
                 endPoint.move.evaluation = thisEval;
                 nodeCounter++;
 
@@ -387,208 +335,6 @@ namespace Dvonn_Console
             Console.WriteLine("AI: Maximum evaluation value found: " + maximumEvaluation);
 
         }
-
-        //Position is evaluated through the options of both 'next player' (after the move has been executed).
-        //If the resulting position gives the next player many options and a good position, the evaluation will be positive and high.
-        //If the position gives equal chances to both players, it will be evaluated to 0.
-        //IMPORTANT: finally, the evaluation is biased according to the generation depth. This means that if the responsible color is equal to class variable 'playerToMove'
-        //the evaluation will be multiplied by -1; But if the responsible color is equal to 'next player', the evaluation will remain unaltered. 
-        public int EvaluatePosition(Node endPoint)
-        {
-            Move move = endPoint.move;
-            Position resultingPosition = endPoint.resultingPosition;
-            int thisEval = 0;
-
-            if (move.isGameOverMove)
-            {
-                thisEval = ComputeGameOverValue(move);
-                return thisEval;
-            }
-
-            //Checks for dvonn collapse and saves result in the node.
-            aiBoard.ReceivePosition(resultingPosition);
-            ruleBook.CheckDvonnCollapse(move, false);
-            endPoint.resultingPosition = aiBoard.SendPosition();
-
-            PieceID movingColor = move.responsibleColor;
-            PieceID nextPlayer = move.responsibleColor.ToOpposite();
-
-            List<Move> nextPlayerLegalMoves = ruleBook.FindLegalMoves(nextPlayer);
-            List<Move> samePlayerLegalMoves = ruleBook.FindLegalMoves(movingColor);
-
-
-            if (currentGamePhase == GamePhase.EarlyGame)
-            {
-                //bonus for controlledstacks
-                List<int> controlledStacks = aiBoard.ControlledStacks(nextPlayer);
-                thisEval += controlledStacks.Count * 100;
-
-                //bonus for single stacks
-                List<int> singles = aiBoard.GetSingles(controlledStacks);
-                thisEval += singles.Count * 250;
-
-                //bonus for singles that land on dvonn
-                List<int> dvonnLanders = aiBoard.DvonnLanders(nextPlayerLegalMoves);
-                foreach (int single in singles)
-                {
-                    if (dvonnLanders.Contains(single)) thisEval += 800;
-                }
-
-                //bonus for dvonn landers in general
-                thisEval += dvonnLanders.Count * 300;
-
-                //bonus for double dvonn landers
-                var dvonnLandersGrouping = dvonnLanders.GroupBy(i => i);
-                foreach (var grp in dvonnLandersGrouping)
-                {
-                    if (grp.Count() > 1) thisEval += 800;
-
-                }
-
-                //bonus for dvonn dominance (per dvonn tower)
-                List<int> dvonnTowers = aiBoard.GetDvonnStacks();
-                foreach (int tower in dvonnTowers)
-                {
-                    List<int> nextPlayerLanders = aiBoard.GetLanders(tower, nextPlayerLegalMoves);
-                    List<int> samePlayerLanders = aiBoard.GetLanders(tower, samePlayerLegalMoves);
-
-                    if (nextPlayerLanders.Count > samePlayerLanders.Count) thisEval += 2000;
-                    else if (nextPlayerLanders.Count == samePlayerLanders.Count) thisEval += 1000;
-
-                }
-
-            }
-
-            if (currentGamePhase == GamePhase.Apex || currentGamePhase == GamePhase.PostApex)
-            {
-                //bonus for controlledstacks
-                List<int> controlledStacks = aiBoard.ControlledStacks(nextPlayer);
-                thisEval += controlledStacks.Count * 100;
-
-                //bonus for legal moves
-                thisEval += nextPlayerLegalMoves.Count * 200;
-
-                //bonus for single stacks
-                List<int> singles = aiBoard.GetSingles(controlledStacks);
-                thisEval += singles.Count * 250;
-
-                //bonus for singles that land on dvonn
-                List<int> dvonnLanders = aiBoard.DvonnLanders(nextPlayerLegalMoves);
-                foreach (int single in singles)
-                {
-                    if (dvonnLanders.Contains(single)) thisEval += 800;
-                }
-
-                //bonus for dvonn landers in general
-                thisEval += dvonnLanders.Count * 300;
-
-                //bonus for landers of landers
-                List<int> dvonnLandersLanders = new List<int>();
-                foreach (int lander in dvonnLanders)
-                {
-                    List<int> landerLanders = aiBoard.GetLanders(lander, nextPlayerLegalMoves);
-                    dvonnLandersLanders.AddRange(landerLanders);
-                    thisEval += landerLanders.Count * 100;
-                }
-
-                //bonus for dvonn dominance (per dvonn tower)
-                List<int> dvonnTowers = aiBoard.GetDvonnStacks();
-                foreach (int tower in dvonnTowers)
-                {
-                    List<int> nextPlayerLanders = aiBoard.GetLanders(tower, nextPlayerLegalMoves);
-                    List<int> samePlayerLanders = aiBoard.GetLanders(tower, samePlayerLegalMoves);
-
-                    if (nextPlayerLanders.Count > samePlayerLanders.Count) thisEval += 2000;
-                    else if (nextPlayerLanders.Count == samePlayerLanders.Count) thisEval += 1000;
-
-                }
-
-                //bonus for dead tower dominance 
-                List<int> deadTowers = aiBoard.DeadTowers(ruleBook);
-                foreach (int deadTower in deadTowers)
-                {
-                    List<int> nextPlayerLanders = aiBoard.GetLanders(deadTower, nextPlayerLegalMoves);
-                    List<int> samePlayerLanders = aiBoard.GetLanders(deadTower, samePlayerLegalMoves);
-
-                    if (nextPlayerLanders.Count > samePlayerLanders.Count) thisEval += 200 * aiBoard.entireBoard[deadTower].stack.Count;
-                    else if (nextPlayerLanders.Count == samePlayerLanders.Count) thisEval += 75 * aiBoard.entireBoard[deadTower].stack.Count;
-                }
-
-            }
-
-
-
-            if (currentGamePhase == GamePhase.EndGame)
-            {
-                //bonus for legal moves
-                thisEval += nextPlayerLegalMoves.Count * 200;
-
-                //bonus for dead tower dominance 
-                List<int> deadTowers = aiBoard.DeadTowers(ruleBook);
-                foreach (int deadTower in deadTowers)
-                {
-                    List<int> nextPlayerLanders = aiBoard.GetLanders(deadTower, nextPlayerLegalMoves);
-                    List<int> samePlayerLanders = aiBoard.GetLanders(deadTower, samePlayerLegalMoves);
-
-                    if (nextPlayerLanders.Count > samePlayerLanders.Count) thisEval += 200 * aiBoard.entireBoard[deadTower].stack.Count;
-                    else if (nextPlayerLanders.Count == samePlayerLanders.Count) thisEval += 75 * aiBoard.entireBoard[deadTower].stack.Count;
-                }
-
-            }
-
-
-            int biasMultiplier = 0;
-            if (playerToMove == movingColor) biasMultiplier = -1;
-            else biasMultiplier = 1;
-
-            if (thisEval == int.MaxValue && biasMultiplier == -1) return int.MinValue;
-            if (thisEval == int.MaxValue && biasMultiplier == 1) return int.MaxValue;
-            if (thisEval == int.MinValue && biasMultiplier == -1) return int.MaxValue;
-            if (thisEval == int.MinValue && biasMultiplier == 1) return int.MinValue;
-
-            return thisEval * biasMultiplier;
-
-        }
-
-        public int ComputeGameOverValue(Move move)
-        {
-            int thisEval = 0;
-            bool isMaximumGeneration = move.gameOverMoveDepth % 2 != 0;
-
-            if (move.whiteScore == move.blackScore) thisEval = 0;
-
-            if (move.whiteScore > move.blackScore)
-            {
-                if (isMaximumGeneration)
-                {
-                    if (playerToMove == PieceID.White) thisEval = int.MaxValue;
-                    else thisEval = int.MinValue;
-                }
-                else
-                {
-                    if (playerToMove == PieceID.White) thisEval = int.MinValue;
-                    else thisEval = int.MaxValue;
-                }
-
-            }
-            if (move.whiteScore < move.blackScore)
-            {
-                if (isMaximumGeneration)
-                {
-                    if (playerToMove == PieceID.White) thisEval = int.MinValue;
-                    else thisEval = int.MaxValue;
-                }
-                else
-                {
-                    if (playerToMove == PieceID.White) thisEval = int.MaxValue;
-                    else thisEval = int.MinValue;
-                }
-
-            }
-            return thisEval;
-
-        }
-
 
         //Finds best move in children of gen 0 (i.e.upcoming AI move) by analyzing PositionTree using
         //minimax algorithm : https://en.wikipedia.org/wiki/Minimax
@@ -626,12 +372,6 @@ namespace Dvonn_Console
             Move chosenMove = null;
             int bestMoveEvaluation = FindValueAmongstChildren(dvonnTree.root);
             List<Node> candidates = dvonnTree.root.children.FindAll(node => node.move.evaluation == bestMoveEvaluation);
-
-            //List<Move> candidateMoves = new List<Move>();
-            //foreach (Node node in nodes)
-            //{
-            //    candidateMoves.Add(node.move);
-            //}
 
             if (candidates.Count == 1)
             {
@@ -688,65 +428,8 @@ namespace Dvonn_Console
         {
             foreach (Node node in candidates)
             {
+                evaluator.SecondaryEvaluation(node, currentGamePhase, playerToMove, beforePosition);
 
-                Move thisMove = node.move;
-
-                if (currentGamePhase == GamePhase.EarlyGame)
-                {
-                    if (beforePosition.TopPiece(thisMove.target) == playerToMove.ToOpposite().ToChar()) thisMove.secondaryEvaluation += 1000;
-                    else if (beforePosition.TopPiece(thisMove.target) == 'D') thisMove.secondaryEvaluation += 500;
-
-                    aiBoard.ReceivePosition(beforePosition);
-                    int beforeDvonnDistance = aiBoard.ShortestDistanceToDvonn(thisMove.source);
-                    aiBoard.ReceivePosition(node.resultingPosition);
-                    int afterDvonnDistance = aiBoard.ShortestDistanceToDvonn(thisMove.target);
-                    thisMove.secondaryEvaluation += (beforeDvonnDistance - afterDvonnDistance) * 400;
-
-                }
-
-                if (currentGamePhase == GamePhase.Apex || currentGamePhase == GamePhase.PostApex)
-                {
-                    if (beforePosition.TopPiece(thisMove.target) == playerToMove.ToOpposite().ToChar()) thisMove.secondaryEvaluation += 800;
-                    else if (beforePosition.TopPiece(thisMove.target) == 'D') thisMove.secondaryEvaluation += 800;
-
-                    aiBoard.ReceivePosition(beforePosition);
-                    int beforeDvonnDistance = aiBoard.ShortestDistanceToDvonn(thisMove.source);
-                    aiBoard.ReceivePosition(node.resultingPosition);
-                    int afterDvonnDistance = aiBoard.ShortestDistanceToDvonn(thisMove.target);
-                    thisMove.secondaryEvaluation += (beforeDvonnDistance - afterDvonnDistance) * 800;
-
-                }
-
-                if (currentGamePhase == GamePhase.EndGame)
-                {
-                    int playerColorScore;
-                    int opponentScore;
-                    if (node.move.isGameOverMove)
-                    {
-                        if (node.move.whiteScore == node.move.blackScore)
-                        {
-                            thisMove.secondaryEvaluation = 0;
-                            continue;
-                        }
-                        if (playerToMove == PieceID.White)
-                        {
-                            playerColorScore = node.move.whiteScore;
-                            opponentScore = node.move.blackScore;
-                        }
-                        else
-                        {
-                            playerColorScore = node.move.blackScore;
-                            opponentScore = node.move.whiteScore;
-                        }
-
-                    }
-                    else
-                    {
-                        playerColorScore = node.resultingPosition.GetScore(playerToMove);
-                        opponentScore = node.resultingPosition.GetScore(playerToMove.ToOpposite());
-                    }
-                    thisMove.secondaryEvaluation += playerColorScore - opponentScore;
-                }
             }
 
             candidates.Sort((x, y) => y.move.secondaryEvaluation.CompareTo(x.move.secondaryEvaluation));

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Dvonn_Console
 {
-    class Field
+    public class Field
     {
         public string fieldName;
         public int index; //index in entireBoard array

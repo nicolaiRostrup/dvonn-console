@@ -5,25 +5,30 @@ namespace Dvonn_Console
 {
     class TreeCrawler
     {
-        public PositionTree tree;
+        private PositionTree tree;
+        private GamePhase gamePhase;
+        private PieceID aiResponsibleColor;
+        private Evaluator evaluator = new Evaluator();
         private Node currentNode = null;
-        private AI aiAgent = null;
+        
 
         //for debug purposes:
         private int pruneCounter = 0;
         private int leavesBefore = 0;
         private int leavesAfter = 0;
         private int evaluatedPositions = 0;
+
         //for debug, regarding endpoint evaluations
         int minimumEvaluation = 0;
         int maximumEvaluation = 0;
         bool evaluationSpanInitiated = false;
 
 
-        public TreeCrawler(PositionTree tree, AI aiAgent)
+        public TreeCrawler(PositionTree tree, GamePhase gamePhase, PieceID aiResponsibleColor)
         {
             this.tree = tree;
-            this.aiAgent = aiAgent;
+            this.gamePhase = gamePhase;
+            this.aiResponsibleColor = aiResponsibleColor;
         }
 
         public void AlphaBetaPruning()
@@ -159,7 +164,7 @@ namespace Dvonn_Console
             int thisEval;
             Node endPoint = currentNode.children[i];
 
-            thisEval = aiAgent.EvaluatePosition(endPoint);
+            thisEval = evaluator.EvaluatePosition(endPoint, gamePhase, aiResponsibleColor);
             endPoint.move.evaluation = thisEval;
             evaluatedPositions++;
 

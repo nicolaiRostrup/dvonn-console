@@ -20,17 +20,14 @@ namespace Dvonn_Console
         //for debug:
         private int leaveCounter = 0;
 
+        public PositionTree()
+        {
+            root = new Node();
+        }
 
         public PositionTree(Position rootPosition)
         {
             root = new Node(rootPosition); //root has no move, because what came before the root position(resulting position of root node) is irrelevant to AI.
-
-        }
-
-        //For test purposes...
-        public PositionTree()
-        {
-            root = new Node();
 
         }
 
@@ -194,7 +191,7 @@ namespace Dvonn_Console
                 iterationCounter++;
             }
             while (stubs.Count > 0);
-            
+
             Console.WriteLine();
             Console.WriteLine("AI: Deleted " + stubDeletionCounter + " stubs in " + iterationCounter + " iterations");
 

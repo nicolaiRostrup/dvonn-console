@@ -10,9 +10,13 @@ namespace Dvonn_Console
     {
         static void Main(string[] args)
         {
+            Board initBoard = new Board();
+            BoardProperties.CalculatePrincipalMoves(initBoard);
+
             GameMaster controller = new GameMaster();
             controller.BeginNewGame();
 
         }
     }
+
 }

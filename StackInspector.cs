@@ -10,13 +10,11 @@ namespace Dvonn_Console
     {
         
         Board thisBoard;
-        Rules ruleBook;
-
 
         public StackInspector(Board dvonnBoard)
         {
             thisBoard = dvonnBoard;
-            ruleBook = new Rules(dvonnBoard);
+            
         }
 
         public void InspectStack(string fieldName)
@@ -25,7 +23,7 @@ namespace Dvonn_Console
 
             List<Piece> chosenPieceList = thisBoard.entireBoard[fieldID].stack;
 
-            List<int> legalTargets = ruleBook.FindLegalTargets(fieldID);
+            List<int> legalTargets = thisBoard.FindLegalTargets(fieldID);
 
 
             if (chosenPieceList.Count == 0)

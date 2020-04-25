@@ -6,8 +6,6 @@ namespace Dvonn_Console
 {
     class Game
     {
-        //Currently human player is allways white
-        //TODO: write option to choose piece color, and enter name...
         public string whitePlayerName = "";
         public string blackPlayerName = "";
         public bool isWhiteAI = false;
@@ -75,7 +73,7 @@ namespace Dvonn_Console
             for (int i = 0; i < pieceCount; i++)
             {
                 int rNum = rGen.Next(0, 24);
-                int rEdgeFieldID = position.edgeFields[rNum];
+                int rEdgeFieldID = BoardProperties.edgeFields[rNum];
 
                 if (position.stacks[rEdgeFieldID].Length == 0)
                 {
@@ -84,7 +82,7 @@ namespace Dvonn_Console
                 else pieceCount++; //the field was occupied, run the loop once again.
             }
 
-            foreach (int edgeFieldId in position.edgeFields)
+            foreach (int edgeFieldId in BoardProperties.edgeFields)
             {
                 if (position.stacks[edgeFieldId].Length == 0)
                 {

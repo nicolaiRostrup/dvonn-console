@@ -5,50 +5,16 @@ using System.Linq;
 
 namespace Dvonn_Console
 {
-    public enum directionID
-    {
-        NE, EA, SE, SW, WE, NW
-    }
 
-    class Board
+    public class Board
     {
         private Writer typeWriter = new Writer();
         public Field[] entireBoard = new Field[49];
-        public Dictionary<Tuple<int, int, int>, int> allPrincipalMoves = new Dictionary<Tuple<int, int, int>, int>();
-        List<directionID> allDirections = new List<directionID> { directionID.NE, directionID.EA, directionID.SE, directionID.SW, directionID.WE, directionID.NW };
 
-        //AllPrincipalMoves.Count=786
-        //Item1 = source, Item2 = target, Item 3 = jumps (number of pieces in source stack).
-        public void CalculatePrincipalMoves()
+
+        public Board()
         {
-            int principalMoveCounter = 1;
-            // For all fields on the board...
-            for (int i = 0; i < 49; i++)
-            {
-                // find all legal moves in any direction...
-                foreach (directionID direction in allDirections)
-                {
-                    Field sourceField = entireBoard[i];
-
-                    for (int jump = 1; jump < 11; jump++) // Max jumps is ten, the move: c0/ct.
-                    {
-                        Field nextField = sourceField.NextField(direction);
-
-                        if (nextField == null)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            allPrincipalMoves.Add(Tuple.Create(i, nextField.index, jump), principalMoveCounter);
-                            sourceField = nextField;
-                            principalMoveCounter++;
-                        }
-
-                    }
-                }
-            }
-
+            InstantiateFields();
         }
 
         public void InstantiateFields()
@@ -294,7 +260,7 @@ namespace Dvonn_Console
             //max distance
             int shortestDistance = 10;
 
-            foreach (directionID direction in allDirections)
+            foreach (directionID direction in BoardProperties.allDirections)
             {
                 Field runningField = entireBoard[fieldID];
                 int jumpCounter = 0;
@@ -331,7 +297,7 @@ namespace Dvonn_Console
         }
 
 
-        public List<int> DeadTowers(Rules ruleBook)
+        public List<int> DeadTowers()
         {
             List<int> deadTowers = new List<int>();
 
@@ -339,7 +305,7 @@ namespace Dvonn_Console
             {
                 if (entireBoard[i].stack.Count < 3) continue;
 
-                if (ruleBook.FindLegalTargets(i).Count == 0) deadTowers.Add(i);
+                if (FindLegalTargets(i).Count == 0) deadTowers.Add(i);
 
             }
             return deadTowers;
@@ -384,7 +350,7 @@ namespace Dvonn_Console
             return landers;
         }
 
-        public List<int> GetAllLanders(int targetID, Rules ruleBook)
+        public List<int> GetAllLanders(int targetID)
         {
             List<int> landers = new List<int>();
 
@@ -392,9 +358,9 @@ namespace Dvonn_Console
             {
                 int pieceCount = entireBoard[i].stack.Count;
                 if (pieceCount == 0) continue;
-                if (ruleBook.EnclosureCondition(i) == true) continue;
+                if (EnclosureCondition(i) == true) continue;
 
-                if (allPrincipalMoves.ContainsKey(Tuple.Create(i, targetID, pieceCount)))
+                if (BoardProperties.allPrincipalMoves.ContainsKey(Tuple.Create(i, targetID, pieceCount)))
                 {
                     landers.Add(targetID);
                 }
@@ -485,6 +451,235 @@ namespace Dvonn_Console
             }
             return false;
 
+        }
+
+        public List<int> FindLegalTargets(int fieldID)
+        {
+            List<int> foundLegalTargets = new List<int>();
+
+            int pieceCount = entireBoard[fieldID].stack.Count;
+            if (pieceCount == 0) return foundLegalTargets;
+            else
+            {
+                List<int> principalTargets = FindNotEmptyStacks();
+                principalTargets.Remove(fieldID);
+                foreach (int targetID in principalTargets)
+                {
+                    if (BoardProperties.allPrincipalMoves.ContainsKey(Tuple.Create(fieldID, targetID, pieceCount)))
+                    {
+                        foundLegalTargets.Add(targetID);
+                    }
+
+                }
+
+            }
+            return foundLegalTargets;
+        }
+
+        public List<Move> FindLegalMoves(PieceID color)
+        {
+            List<Move> legalMoves = new List<Move>();
+            List<int> notEmptyStacks = FindNotEmptyStacks();
+            List<int> sources = LegalSources(color);
+
+            foreach (int sourceID in sources)
+            {
+                int pieceCount = entireBoard[sourceID].stack.Count;
+
+                foreach (int targetID in notEmptyStacks)
+                {
+                    if (targetID == sourceID) continue;
+                    if (BoardProperties.allPrincipalMoves.ContainsKey(Tuple.Create(sourceID, targetID, pieceCount)))
+                    {
+                        legalMoves.Add(new Move(sourceID, targetID, color));
+                    }
+
+                }
+
+            }
+            return legalMoves;
+        }
+
+        public List<int> FindNotEmptyStacks()
+        {
+            List<int> principalTargets = new List<int>();
+
+            for (int i = 0; i < 49; i++)
+            {
+                if (entireBoard[i].stack.Count > 0)
+                {
+                    principalTargets.Add(i);
+                }
+
+            }
+            return principalTargets;
+        }
+
+        private List<int> LegalSources(PieceID colorToMove)
+        {
+            List<int> notEmptyStacks = FindNotEmptyStacks();
+            List<int> legalSources = new List<int>();
+
+            foreach (int fieldID in notEmptyStacks)
+            {
+                if (entireBoard[fieldID].TopPiece().pieceType != colorToMove) continue;
+                else if (EnclosureCondition(fieldID) == true) continue;
+                else legalSources.Add(fieldID);
+
+            }
+            return legalSources;
+        }
+
+        public List<int> ExtractSources(List<Move> moveList)
+        {
+            List<int> trueLegalSources = new List<int>();
+
+            foreach (Move move in moveList)
+            {
+                if (!trueLegalSources.Contains(move.source))
+                {
+                    trueLegalSources.Add(move.source);
+                }
+            }
+            return trueLegalSources;
+        }
+
+        public List<int> ExtractTargets(List<Move> moveList)
+        {
+            List<int> trueLegalTargets = new List<int>();
+
+            foreach (Move move in moveList)
+            {
+                if (!trueLegalTargets.Contains(move.target))
+                {
+                    trueLegalTargets.Add(move.target);
+                }
+            }
+            return trueLegalTargets;
+        }
+
+
+        public bool EnclosureCondition(int fieldID)
+        {
+            // kant-felter kan ikke være "enclosed"
+            if (entireBoard[fieldID].isEdge == true) return false;
+
+            foreach (Field field in entireBoard[fieldID].GetNeighbours())
+            {
+                if (field.stack.Count == 0)
+                {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+
+        public int GetScore(PieceID color)
+        {
+            int scoreCounter = 0;
+            for (int i = 0; i < 49; i++)
+            {
+                Field chosenField = entireBoard[i];
+                if (chosenField.stack.Count == 0) continue;
+                if (chosenField.TopPiece().pieceType == color) scoreCounter += chosenField.stack.Count;
+
+            }
+            return scoreCounter;
+        }
+
+        public void CheckDvonnCollapse(Move effectiveMove, bool writeText)
+        {
+            if (writeText == false)
+            {
+                int[] result = RemoveUnheldStacks(FindHeldStacks());
+                if (result[0] > 0 && result[1] > 0)
+
+                    if (effectiveMove != null)
+                    {
+                        effectiveMove.isCollapseMove = true;
+                        effectiveMove.collapsedTowers = result[0];
+                    }
+            }
+            else
+            {
+                int[] result = RemoveUnheldStacks(FindHeldStacks());
+                if (result[0] > 0 && result[1] > 0)
+                {
+                    typeWriter.DvonnCollapseText(result);
+                    if (effectiveMove != null)
+                    {
+                        effectiveMove.isCollapseMove = true;
+                        effectiveMove.collapsedTowers = result[0];
+                    }
+                    VisualizeBoard();
+                }
+
+            }
+
+        }
+
+        public List<Field> FindHeldStacks()
+        {
+            List<Field> heldFields = new List<Field>();
+
+            // gets the Fields that contains dvonn pieces and makes them held
+            foreach (Field field in entireBoard)
+            {
+                if (field.stack.Any(p => p.pieceType == PieceID.Dvonn))
+                {
+                    heldFields.Add(field);
+                }
+            }
+
+            //then iteratively add neighbour fields if they touch a dvonn field (or touch a field that touches a dvonn field),
+            //untill no fields are added in one do-while cycle.
+            int counter;
+            do
+            {
+                counter = 0;
+
+                for (int i = 0; i < heldFields.Count; i++)
+                {
+                    List<Field> neighbours = heldFields[i].GetNeighbours();
+
+                    for (int j = 0; j < neighbours.Count; j++)
+                    {
+                        if (neighbours[j].stack.Count > 0 && !heldFields.Contains(neighbours[j]))
+                        {
+                            heldFields.Add(neighbours[j]);
+                            counter++;
+                        }
+                    }
+                }
+            }
+            while (counter > 0);
+
+            return heldFields;
+        }
+
+        public int[] RemoveUnheldStacks(List<Field> heldFields)
+        {
+            int fieldCounter = 0;
+            int pieceCounter = 0;
+
+            foreach (Field field in entireBoard)
+            {
+                if (heldFields.Contains(field)) continue;
+                else if (field.stack.Count == 0) continue;
+                else
+                {
+                    pieceCounter += field.stack.Count;
+                    field.stack.Clear();
+                    fieldCounter++;
+                }
+
+            }
+            int[] result = new int[2];
+            result[0] = fieldCounter;
+            result[1] = pieceCounter;
+
+            return result;
         }
     }
 }
