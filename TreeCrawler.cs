@@ -159,16 +159,9 @@ namespace Dvonn_Console
             int thisEval;
             Node endPoint = currentNode.children[i];
 
-            if (endPoint.move.isGameOverMove)
-            {
-                thisEval = endPoint.move.evaluation;
-            }
-            else
-            {
-                thisEval = aiAgent.EvaluatePosition(endPoint.move, endPoint.resultingPosition);
-                endPoint.move.evaluation = thisEval;
-                evaluatedPositions++;
-            }
+            thisEval = aiAgent.EvaluatePosition(endPoint);
+            endPoint.move.evaluation = thisEval;
+            evaluatedPositions++;
 
             //for debug:
             if (evaluationSpanInitiated == false)

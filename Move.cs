@@ -7,6 +7,7 @@
         public PieceID responsibleColor;
         public bool isPassMove = false;
         public bool isGameOverMove = false;
+        public int gameOverMoveDepth;
         public int whiteScore;
         public int blackScore;
         public int evaluation;

@@ -124,8 +124,8 @@ namespace Dvonn_Console
                 {
                     case "1": // Enter move ...
 
-                        //Move chosenMove = GetUserMoveInput(playerLegalMoves);
-                        Move chosenMove = PickRandomMove(playerLegalMoves);
+                        Move chosenMove = GetUserMoveInput(playerLegalMoves);
+                        //Move chosenMove = PickRandomMove(playerLegalMoves);
 
                         if (chosenMove.source == 0 && chosenMove.target == 0) // a special situation, where user wants to go back to menu
                         {
@@ -252,30 +252,21 @@ namespace Dvonn_Console
                         dvonnBoard.ClearBoard();
                         //Position partialDvonnGame = dvonnGame.RandomPopulate(3, 8, 8);
                         Position partialDvonnGame = new Position();
-                        partialDvonnGame.stacks[1] = "BW";
-                        partialDvonnGame.stacks[2] = "WB";
-                        partialDvonnGame.stacks[3] = "WW";
-                        partialDvonnGame.stacks[4] = "WW";
-                        partialDvonnGame.stacks[5] = "BDBWB";
-                        partialDvonnGame.stacks[6] = "BWW";
-                        partialDvonnGame.stacks[7] = "BBB";
-                        partialDvonnGame.stacks[11] = "WWBB";
-                        partialDvonnGame.stacks[12] = "WBW";
-                        partialDvonnGame.stacks[13] = "W";
-                        partialDvonnGame.stacks[14] = "WW";
-                        partialDvonnGame.stacks[15] = "BB";
-                        partialDvonnGame.stacks[16] = "WW";
-                        partialDvonnGame.stacks[21] = "W";
-                        partialDvonnGame.stacks[22] = "WDBBB";
-                        partialDvonnGame.stacks[23] = "W";
-                        partialDvonnGame.stacks[24] = "W";
-                        partialDvonnGame.stacks[24] = "B";
-                        partialDvonnGame.stacks[24] = "B";
-                        partialDvonnGame.stacks[38] = "DW";
-                        partialDvonnGame.stacks[39] = "WW";
-                        partialDvonnGame.stacks[46] = "W";
-                        partialDvonnGame.stacks[47] = "WBWW";
-                        partialDvonnGame.stacks[48] = "W";
+                        
+                        partialDvonnGame.stacks[12] = "WBB";
+                        partialDvonnGame.stacks[15] = "DW";
+                        partialDvonnGame.stacks[16] = "W";
+                        partialDvonnGame.stacks[21] = "BB";
+                        partialDvonnGame.stacks[22] = "BB";
+                        partialDvonnGame.stacks[26] = "WWW";
+                        partialDvonnGame.stacks[27] = "W";
+                        partialDvonnGame.stacks[32] = "DB";
+                        partialDvonnGame.stacks[33] = "WB";
+                        partialDvonnGame.stacks[35] = "BBWB";
+                        partialDvonnGame.stacks[37] = "WB";
+                        partialDvonnGame.stacks[41] = "W";
+                        partialDvonnGame.stacks[44] = "B";
+                        partialDvonnGame.stacks[45] = "D";
 
 
                         dvonnBoard.ReceivePosition(partialDvonnGame);
@@ -458,6 +449,7 @@ namespace Dvonn_Console
                 dvonnGame.gameMoveList.Add(randomMove);
                 dvonnBoard.VisualizeBoard();
                 typeWriter.MoveComment(randomMove, aiColor);
+                ruleBook.CheckDvonnCollapse(randomMove, true);
 
                 aiLegalMoves = ruleBook.FindLegalMoves(aiColor);
                 playerLegalMoves = ruleBook.FindLegalMoves(humanColor);

@@ -287,7 +287,7 @@ namespace Dvonn_Console
 
         }
 
-        private int ShortestDistanceToDvonn(int fieldID)
+        public int ShortestDistanceToDvonn(int fieldID)
         {
             if (entireBoard[fieldID].stack.Any(piece => piece.pieceType == PieceID.Dvonn)) return 0;
 
@@ -346,41 +346,6 @@ namespace Dvonn_Console
 
         }
 
-        public DeadTowerAnalysis ManufactureDeadTowerAnalysis(Rules ruleBook, PieceID humanColor)
-        {
-            DeadTowerAnalysis analysis = new DeadTowerAnalysis();
-            List<int> deadTowers = DeadTowers(ruleBook);
-            List<int> dvonnStacks = GetDvonnStacks();
-
-            foreach (int tower in deadTowers)
-            {
-                List<int> towerLanders = GetAllLanders(tower, ruleBook);
-                List<int> thisColorLanders = towerLanders.FindAll(lander => entireBoard[lander].TopPiece().pieceType == humanColor);
-                int thisColorCount = thisColorLanders.Count;
-                int opposedNumber = towerLanders.Count - thisColorCount;
-
-                if (thisColorCount > opposedNumber)
-                {
-                    analysis.humanColorTowerGain += entireBoard[tower].stack.Count;
-                    if (dvonnStacks.Contains(tower)) analysis.humanColorDvonnTowerControl++;
-                }
-                else if (opposedNumber > thisColorCount)
-                {
-                    analysis.aiColorTowerGain += entireBoard[tower].stack.Count;
-                    if (dvonnStacks.Contains(tower)) analysis.aiColorDvonnTowerControl++;
-                }
-            }
-
-            return analysis;
-        }
-
-        public class DeadTowerAnalysis
-        {
-            public int humanColorTowerGain = 0;
-            public int aiColorTowerGain = 0;
-            public int humanColorDvonnTowerControl = 0;
-            public int aiColorDvonnTowerControl = 0;
-        }
 
         public List<int> GetDvonnStacks()
         {
@@ -487,24 +452,6 @@ namespace Dvonn_Console
 
         }
 
-        public int GetZebraCount(PieceID color)
-        {
-            int zebraCounter = 0;
-
-            for (int i = 0; i < 49; i++)
-            {
-                List<Piece> stack = entireBoard[i].stack;
-                if (stack.Count < 2) continue;
-
-                if (stack[0].pieceType == color.ToOpposite() && stack[1].pieceType == color)
-                {
-                    zebraCounter++;
-                }
-
-            }
-            return zebraCounter;
-
-        }
 
         public List<int> DvonnLanders(List<Move> legalMoves)
         {
