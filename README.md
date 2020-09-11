@@ -1,28 +1,12 @@
 # Dvonn
 
-## - C# applikation
+### Purpose
+This is a simple console application that excersises the rules of the game and enables manual turnbased interaction. It is a component in a larger project that will also include an AI.
 
-
-### Hvad er Dvonn?
-
-Dvonn er et abstrakt brætspil, udviklet som fysisk spil af spildesigneren Kris Burm i 2001.
-Dvonn minder lidt om dam eller kina-skak, men har et meget dybere strategisk niveau end disse spil, som til gengæld minder mere om det strategiske niveau i skak eller go.
-
-Dvonn spilles på det særlige Dvonn bræt, som ser sådan ud:
-
+This is what the boad looks like:
 
 <img src=/dvonn_board.jpg width="800">
 
 
-Brikkerne fordeles tilfældigt på brættets felter1. Hvid og sort har 23 brikker hver, som de skiftevis flytter. Der er desuden tre røde brikker, Dvonn brikker, som har særlig betydning.
-
-Hver stack flyttes ligeså mange felter, som den indeholder brikker. For at være et gyldigt træk, skal stack’en desuden have spillerens farve som øverste brik, samt lande på et felt, som i forvejen har en eller flere brikker.
-
-Den nærværende udgave af applikationen er en ren konsol applikation.  Brættet ”visualiseres” ved hjælp af tekstfragmenter i forskellige farver. Console.Clear metoden sikrer at brættet altid er øverst i konsollen. Sammen med brættet vises altid en oversigt over koordinaterne. Disse anvendes ved indkodning af træk.
-Under brættet findes en menu, hvor man kan vælge enten at flytte en stack eller inspicere en stack (få informationer om, hvilke brikker der er i stacken). Man kan desuden også få den nuværende score fremvist, samt få fremvist reglerne.
-
-Hvid (menneske) og Sort (computer) skiftes til at flytte brikkerne i forhold til reglerne, som kan ses her.
-I den nærværende udgave af spillet, vælger computeren tilfældige (men dog altid legale) træk.
-
-I slutfasen er programmet i stand til at håndtere Dvonn collapse, Pass Condition samt Game End.
+DVONN is played on an elongated hexagonal board, with 23 white, 23 black and 3 red DVONN-pieces. In the beginning the board is empty. The players place the pieces on empty spaces of the board, without restrictions. They place the DVONN-pieces first and their own pieces next. Then they start stacking pieces on top of each other. A single piece may be moved 1 space in any direction, a stack of two pieces may be moved two spaces, etc. A stack must always be moved as a whole and a move must always end on top of another piece or stack. If pieces or stacks lose contact with the DVONN-pieces, they must be removed from the board. The game ends when no more moves can be made. The players put the stacks they control on top of each other and the one with the highest stack is the winner.
 
